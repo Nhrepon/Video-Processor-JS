@@ -162,7 +162,7 @@ async function processVideo() {
 
   const inputVideo = inputPath("input.mp4");
   const introVideo = assetPath("intro.mp4");
-  const extraAudio = assetPath("audio.mp4");
+  const extraAudio = assetPath("audio.mp3");
   const outputVideo = path.join(outputDir, "output-nhrepon-com-1x1.mp4");
 
   if (!fs.existsSync(inputVideo))
@@ -257,7 +257,11 @@ async function processVideo() {
   );
 
   // Audio
-  fc.push(`[0:a]${atempoFilters(SPEED_FACTOR)},volume=1.0[mainorig]`);
+  // fc.push(`[0:a]${atempoFilters(SPEED_FACTOR)},volume=1.0[mainorig]`);
+  fc.push(
+    `[0:a]asetrate=44100*1.06,aresample=44100,${atempoFilters(SPEED_FACTOR / 1.06)},volume=1.0[mainorig]`,
+  );
+
   fc.push(`[1:a]${atempoFilters(SPEED_FACTOR)},volume=1.0[introorig]`);
   fc.push(
     `[2:a]${atempoFilters(SPEED_FACTOR)},asplit=2[extraamain][extraaintro]`,
