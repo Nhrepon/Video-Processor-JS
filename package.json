@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/videoprocessor.js"
+    "start": "node src/videoprocessor.js",
+    "starts": "node src/part.js"
   },
   "keywords": [],
   "author": "",

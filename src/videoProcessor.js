@@ -166,7 +166,10 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
     const extraAudio = fs
       .readdirSync(audioDir)
       .map((file) => path.join(audioDir, file))[0];
-    const outputVideo = path.join(outputDir, `produced-by-nhrepon-${fileName}`);
+    const randomId = Math.floor(Math.random() * 99999) + 1;
+    const outputFileName =
+      `${fileBaseName}-${randomId}-by-nhrepon${fileExt}`.replace(/\s+/g, "-");
+    const outputVideo = path.join(outputDir, outputFileName);
 
     if (!fs.existsSync(inputVideo))
       throw new Error(`input.mp4 not found at ${inputVideo}`);
