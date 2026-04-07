@@ -12,7 +12,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   ffmpeg.setFfmpegPath(ffmpegPath);
   ffmpeg.setFfprobePath(ffprobePath);
 
-  const SPEED_FACTOR = 1.15;
+  const SPEED_FACTOR = 1.05;
   const OUTPUT_WIDTH = 1080;
   const OUTPUT_HEIGHT = 1350;
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
@@ -25,10 +25,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const OVERLAY_MIN_GAP = 5;
   const OVERLAY_MAX_GAP = 12;
   const BLUR_STRENGTH = 10;
-  const VOICE_PITCH = 0.84;
-  const ORIGINAL_AUDIO_VOLUME = 0.75;
-  const BED_AUDIO_VOLUME = 0.18;
-
+  const VOICE_PITCH = 0.94;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
@@ -39,6 +36,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const drawtextFont = assetPath("RacingSansOne-Regular.ttf")
     .replace(/\\/g, "\\\\")
     .replace(/:/g, "\\:");
+  const logoPath = assetPath("logo.png");
 
   function timemarkToSeconds(timemark) {
     if (!timemark) return null;
@@ -162,7 +160,6 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     try {
       fs.mkdirSync(assetsDir, { recursive: true });
       fs.mkdirSync(outputDir, { recursive: true });
-      fs.mkdirSync(audioDir, { recursive: true });
 
       const inputVideo = videoPath;
       const introVideo = fs
@@ -208,6 +205,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         { path: introVideo, type: "video" },
         { path: extraAudio, type: "audio" },
         ...overlayAssets,
+        { path: logoPath, type: "image" },
       ];
 
       const command = ffmpeg();
@@ -240,17 +238,22 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         currentMainLabel = outLabel;
       });
 
-      const brandText = escapeDrawtext("Produced By Nhrepon.com");
+      const brandText = escapeDrawtext("Nhrepon.com");
       const bottomText = escapeDrawtext(
         "Like, Comment and Share for more videos!",
       );
       fc.push(
-        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=62:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
+        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=92:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
       );
       fc.push(
-        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
+        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
       );
 
+      // logo
+      fc.push(
+        `[${3 + overlayAssets.length}:v]scale=${140}:-1,format=rgba[mainlogo]`,
+      );
+      fc.push(`[maintexted][mainlogo]overlay=W-w-${20}:${20}[mainv]`);
       // Intro processing at half-res blur also
       fc.push(`[1:v]setpts=PTS/${SPEED_FACTOR},split=2[introA][introB]`);
       fc.push(
@@ -268,9 +271,8 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       );
 
       fc.push(
-        `[0:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},highpass=f=120,lowpass=f=7000,acompressor=threshold=0.12:ratio=3:attack=20:release=250:makeup=1.8,volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
+        `[0:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=1.0[mainorig]`,
       );
-
       fc.push(
         `[1:a]${atempoFilters(SPEED_FACTOR)},atrim=duration=${introDuration.toFixed(3)},volume=1.0[introorig]`,
       );
@@ -278,10 +280,10 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         `[2:a]${atempoFilters(SPEED_FACTOR)},asplit=2[extraamain][extraaintro]`,
       );
       fc.push(
-        `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
+        `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=0.3[mainbed]`,
       );
       fc.push(
-        `[extraaintro]atrim=start=${mainDuration.toFixed(3)}:duration=${introDuration.toFixed(3)},volume=0.5[introbed]`,
+        `[extraaintro]atrim=start=${mainDuration.toFixed(3)}:duration=${introDuration.toFixed(3)},volume=0.3[introbed]`,
       );
       fc.push(
         `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`,
@@ -312,7 +314,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
           "-c:a",
           "aac",
           "-b:a",
-          "128k",
+          "192k",
           "-r",
           String(OUTPUT_FPS),
           "-pix_fmt",
@@ -470,9 +472,9 @@ async function splitVideo({
 const inputDir = path.join(__dirname, "input");
 const introDir = path.join(__dirname, "intro");
 const assetsDir = path.join(__dirname, "assets");
-const audioDir = path.join(__dirname, "audio/youtube");
+const audioDir = path.join(__dirname, "audio");
 const partDir = path.join(__dirname, "parts");
-const partOutputDir = path.join(__dirname, "partOutput/youtube");
+const partOutputDir = path.join(__dirname, "partOutput");
 
 async function run() {
   const inputFiles = fs
@@ -492,7 +494,7 @@ async function run() {
       introDir,
       assetsDir,
       audioDir,
-      partMinutes: 6,
+      partMinutes: 4,
     });
 
     console.log(`Finished ${path.basename(inputVideo)}`);

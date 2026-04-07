@@ -240,7 +240,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
 
     const brandText = escapeDrawtext("Produced By Nhrepon.com");
     const bottomText = escapeDrawtext(
-      "Like, Comment and Share for more vidoe!",
+      "Like, Comment and Share for more videos!",
     );
     fc.push(
       `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
@@ -323,9 +323,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
         "-map_metadata",
         "-1",
         "-metadata",
-        "title=Nhrepon com Original Square Video",
+        "title=Md. Nur Hossain Repon Original Video",
         "-metadata",
-        "comment=Produced by NHRepon com",
+        "comment=Produced by NHRepon",
         "-metadata",
         "artist=Md. Nur Hossain Repon",
       ])
