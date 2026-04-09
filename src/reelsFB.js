@@ -14,18 +14,18 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
   const SPEED_FACTOR = 1.05;
   const OUTPUT_WIDTH = 1080;
-  const OUTPUT_HEIGHT = 1350;
+  const OUTPUT_HEIGHT = 1920;
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
   const HALF_HEIGHT = Math.floor(OUTPUT_HEIGHT / 2);
   const OUTPUT_FPS = 30;
   const X264_PRESET = "fast";
   const CRF = "24";
   const OVERLAY_OPACITY = 0.3;
-  const OVERLAY_DURATION = 1.2;
+  const OVERLAY_DURATION = 1.0;
   const OVERLAY_MIN_GAP = 5;
   const OVERLAY_MAX_GAP = 12;
   const BLUR_STRENGTH = 10;
-  const VOICE_PITCH = 0.87;
+  const VOICE_PITCH = 0.91;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
@@ -160,6 +160,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     try {
       fs.mkdirSync(assetsDir, { recursive: true });
       fs.mkdirSync(outputDir, { recursive: true });
+      fs.mkdirSync(audioDir, { recursive: true });
 
       const inputVideo = videoPath;
       const introVideo = fs
@@ -219,7 +220,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[mainbg]`,
       );
       fc.push(
-        `[mainB]hflip,scale=${1000}:${1000}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
+        `[mainB]hflip,scale=${1080}:${1080}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
       );
       fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
 
@@ -243,7 +244,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         "Like, Comment and Share for more videos!",
       );
       fc.push(
-        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=92:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
+        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=120:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
       );
       fc.push(
         `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
@@ -251,7 +252,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
       // logo
       fc.push(
-        `[${3 + overlayAssets.length}:v]scale=${140}:-1,format=rgba[mainlogo]`,
+        `[${3 + overlayAssets.length}:v]scale=${150}:-1,format=rgba[mainlogo]`,
       );
       fc.push(`[maintexted][mainlogo]overlay=W-w-${20}:${20}[mainv]`);
       // Intro processing at half-res blur also
@@ -494,7 +495,7 @@ async function run() {
       introDir,
       assetsDir,
       audioDir,
-      partMinutes: 3,
+      partMinutes: 1,
     });
 
     console.log(`Finished ${path.basename(inputVideo)}`);
