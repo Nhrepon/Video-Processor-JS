@@ -4,6 +4,7 @@ const ffprobePath = require("@ffprobe-installer/ffprobe").path;
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { removeFile } = require("./utility/utility");
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
@@ -12,7 +13,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   ffmpeg.setFfmpegPath(ffmpegPath);
   ffmpeg.setFfprobePath(ffprobePath);
 
-  const SPEED_FACTOR = 1.15;
+  const SPEED_FACTOR = 1.05;
   const OUTPUT_WIDTH = 1080;
   const OUTPUT_HEIGHT = 1350;
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
@@ -20,13 +21,13 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const OUTPUT_FPS = 30;
   const X264_PRESET = "fast";
   const CRF = "24";
-  const OVERLAY_OPACITY = 0.3;
+  const OVERLAY_OPACITY = 0.2;
   const OVERLAY_DURATION = 1.2;
   const OVERLAY_MIN_GAP = 5;
   const OVERLAY_MAX_GAP = 12;
   const BLUR_STRENGTH = 10;
-  const VOICE_PITCH = 0.84;
-  const ORIGINAL_AUDIO_VOLUME = 0.75;
+  const VOICE_PITCH = 0.89;
+  const ORIGINAL_AUDIO_VOLUME = 0.9;
   const BED_AUDIO_VOLUME = 0.18;
 
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
@@ -39,6 +40,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const drawtextFont = assetPath("RacingSansOne-Regular.ttf")
     .replace(/\\/g, "\\\\")
     .replace(/:/g, "\\:");
+  const logoPath = assetPath("logo.png");
 
   function timemarkToSeconds(timemark) {
     if (!timemark) return null;
@@ -208,6 +210,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         { path: introVideo, type: "video" },
         { path: extraAudio, type: "audio" },
         ...overlayAssets,
+        { path: logoPath, type: "image" },
       ];
 
       const command = ffmpeg();
@@ -240,16 +243,22 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         currentMainLabel = outLabel;
       });
 
-      const brandText = escapeDrawtext("Produced By Nhrepon.com");
+      const brandText = escapeDrawtext("Nhrepon.com");
       const bottomText = escapeDrawtext(
         "Like, Comment and Share for more videos!",
       );
       fc.push(
-        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=62:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
+        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=120:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=40:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
       );
       fc.push(
-        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
+        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`,
       );
+
+      // logo
+      fc.push(
+        `[${3 + overlayAssets.length}:v]scale=${160}:-1,format=rgba[mainlogo]`,
+      );
+      fc.push(`[maintexted][mainlogo]overlay=W-w-${10}:${10}[mainv]`);
 
       // Intro processing at half-res blur also
       fc.push(`[1:v]setpts=PTS/${SPEED_FACTOR},split=2[introA][introB]`);
@@ -261,10 +270,10 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       );
       fc.push(`[introbg][introfg]overlay=(W-w)/2:(H-h)/2[introbase]`);
       fc.push(
-        `[introbase]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=28:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=90:fix_bounds=true:enable='gte(t,0)'[introtoptext]`,
+        `[introbase]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=36:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=90:fix_bounds=true:enable='gte(t,0)'[introtoptext]`,
       );
       fc.push(
-        `[introtoptext]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=28:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-90:fix_bounds=true:enable='gte(t,0)',setsar=1[introv]`,
+        `[introtoptext]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=36:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-90:fix_bounds=true:enable='gte(t,0)',setsar=1[introv]`,
       );
 
       fc.push(
@@ -462,6 +471,12 @@ async function splitVideo({
       splitPartPath,
       processedOutput,
     });
+    const removed = await removeFile(splitPartPath);
+    console.log(
+      removed
+        ? `Removed temp part: ${splitPartPath}`
+        : `Temp part already missing: ${splitPartPath}`,
+    );
   }
 
   return processedFiles;
@@ -492,7 +507,7 @@ async function run() {
       introDir,
       assetsDir,
       audioDir,
-      partMinutes: 6,
+      partMinutes: 4,
     });
 
     console.log(`Finished ${path.basename(inputVideo)}`);

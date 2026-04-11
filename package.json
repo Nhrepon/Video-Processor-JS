@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/videoprocessor.js",
     "partfb": "node src/partFB.js",
-    "part": "node src/part.js",
+    "partyt": "node src/partyt.js",
     "reelsfb": "node src/reelsFB.js",
     "reelsyt": "node src/reelsYT.js"
   },
