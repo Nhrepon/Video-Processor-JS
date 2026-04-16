@@ -17,6 +17,11 @@ const ffprobePath = require("@ffprobe-installer/ffprobe").path;
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const {
+  getRandomNumber,
+  getAudioFiles,
+  removeFile,
+} = require("./utility/utility");
 
 function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
   ffmpeg.setFfmpegPath(ffmpegPath);
@@ -26,22 +31,39 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
   const OUTPUT_SIZE = 1080;
   const HALF_SIZE = Math.floor(OUTPUT_SIZE / 2);
   const OUTPUT_FPS = 30;
-  const X264_PRESET = "fast";
-  const CRF = "24";
-  const OVERLAY_OPACITY = 0.3;
-  const OVERLAY_DURATION = 1.2;
-  const OVERLAY_MIN_GAP = 5;
-  const OVERLAY_MAX_GAP = 12;
-  const BLUR_STRENGTH = 10;
+  const X264_PRESET = "slow";
+  const CRF = "18";
+  const OVERLAY_OPACITY = 0.04;
+  const OVERLAY_DURATION = 1.0;
+  const OVERLAY_MIN_GAP = 9;
+  const OVERLAY_MAX_GAP = 22;
+  const BLUR_STRENGTH = 2;
 
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
   let fileName = path.basename(videoPath); // adjust if you run from repo root
+  const fileExt = path.extname(fileName);
+  const fileBaseName = path.basename(fileName, fileExt);
   const assetPath = (fileName) => path.join(assetsDir, fileName);
   const drawtextFont = assetPath("RacingSansOne-Regular.ttf")
     .replace(/\\/g, "\\\\")
     .replace(/:/g, "\\:");
+  const logoPath = assetPath("logo.png");
+  const metadataTitle = `${fileBaseName} | Movie Clip`;
+  const metadataDescription =
+    "Movie clip edit featuring cinematic scenes, short highlights, and engaging moments curated for social video audiences.";
+  const metadataKeywords = [
+    "movie clip",
+    "film scene",
+    "cinematic",
+    "viral clip",
+    "short video",
+    "entertainment",
+    "movie highlights",
+    "scene edit",
+    "nhrepon",
+  ].join(",");
 
   function timemarkToSeconds(timemark) {
     if (!timemark) return null;
@@ -163,12 +185,19 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
     const introVideo = fs
       .readdirSync(introDir)
       .map((file) => path.join(introDir, file))[0];
-    const extraAudio = fs
-      .readdirSync(audioDir)
-      .map((file) => path.join(audioDir, file))[0];
+    const audioFiles = getAudioFiles(audioDir);
+    const extraAudio =
+      audioFiles.length > 0
+        ? audioFiles[getRandomNumber(0, audioFiles.length - 1)]
+        : audioFiles[0];
     const randomId = Math.floor(Math.random() * 99999) + 1;
     const outputFileName =
-      `${fileBaseName}-${randomId}-by-nhrepon${fileExt}`.replace(/\s+/g, "-");
+      `${fileBaseName}-${randomId}-by-nhrepon`
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-zA-Z0-9-]/g, "")
+        .replace(/-+/g, "-")
+        .toLowerCase() + `.mp4`;
     const outputVideo = path.join(outputDir, outputFileName);
 
     if (!fs.existsSync(inputVideo))
@@ -190,7 +219,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
     ]);
 
     const mainDuration = mainOrigDur / SPEED_FACTOR;
-    const introDuration = introOrigDur / SPEED_FACTOR;
+    const introDuration = introOrigDur;
     const totalDuration = mainDuration + introDuration;
     const overlays = buildOverlayPlan(mainDuration, overlayAssets.length);
 
@@ -203,6 +232,10 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
       { path: extraAudio, type: "audio", label: "audio" },
       ...overlayAssets.map((a) => ({ ...a })),
     ];
+    const hasLogo = fs.existsSync(logoPath);
+    if (hasLogo) {
+      inputs.push({ path: logoPath, type: "image", label: "logo" });
+    }
 
     const command = ffmpeg();
     inputs.forEach((inp) => addInput(command, inp));
@@ -216,7 +249,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
       `[mainA]scale=${HALF_SIZE}:${HALF_SIZE}:force_original_aspect_ratio=increase,crop=${HALF_SIZE}:${HALF_SIZE},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_SIZE}:${OUTPUT_SIZE},${gradeFilter}[mainbg]`,
     );
     fc.push(
-      `[mainB]hflip,scale=1400:1400:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
+      `[mainB]hflip,scale=${OUTPUT_SIZE}:${OUTPUT_SIZE}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
     );
     fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
 
@@ -238,31 +271,26 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
       currentMainLabel = outLabel;
     });
 
-    const brandText = escapeDrawtext("Produced By Nhrepon.com");
+    const brandText = escapeDrawtext("Nhrepon.com");
     const bottomText = escapeDrawtext(
       "Like, Comment and Share for more videos!",
     );
     fc.push(
-      `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
+      `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=10:y=10:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
     );
     fc.push(
-      `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
+      `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=30:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
     );
+    if (hasLogo) {
+      fc.push(
+        `[${3 + overlayAssets.length}:v]scale=140:-1,format=rgba[mainlogo]`,
+      );
+      fc.push(`[mainv][mainlogo]overlay=W-w-10:10[mainvwithlogo]`);
+    }
 
-    // Intro processing at half-res blur also
-    fc.push(`[1:v]setpts=PTS/${SPEED_FACTOR},split=2[introA][introB]`);
+    // Keep intro at original size: center-crop if too large, pad if too small.
     fc.push(
-      `[introA]scale=${HALF_SIZE}:${HALF_SIZE}:force_original_aspect_ratio=increase,crop=${HALF_SIZE}:${HALF_SIZE},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_SIZE}:${OUTPUT_SIZE},${gradeFilter}[introbg]`,
-    );
-    fc.push(
-      `[introB]scale=${OUTPUT_SIZE}:${OUTPUT_SIZE}:force_original_aspect_ratio=increase,${gradeFilter}[introfg]`,
-    );
-    fc.push(`[introbg][introfg]overlay=(W-w)/2:(H-h)/2[introbase]`);
-    fc.push(
-      `[introbase]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=28:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=90:fix_bounds=true:enable='gte(t,0)'[introtoptext]`,
-    );
-    fc.push(
-      `[introtoptext]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=28:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-90:fix_bounds=true:enable='gte(t,0)',setsar=1[introv]`,
+      `[1:v]crop='min(iw,${OUTPUT_SIZE})':'min(ih,${OUTPUT_SIZE})':(iw-min(iw\\,${OUTPUT_SIZE}))/2:(ih-min(ih\\,${OUTPUT_SIZE}))/2,pad=${OUTPUT_SIZE}:${OUTPUT_SIZE}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1[introv]`,
     );
 
     // Audio
@@ -271,101 +299,122 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
       `[0:a]asetrate=44100*1.06,aresample=44100,${atempoFilters(SPEED_FACTOR / 1.06)},volume=1.0[mainorig]`,
     );
 
-    fc.push(`[1:a]${atempoFilters(SPEED_FACTOR)},volume=1.0[introorig]`);
-    fc.push(
-      `[2:a]${atempoFilters(SPEED_FACTOR)},asplit=2[extraamain][extraaintro]`,
-    );
+    fc.push(`[1:a]anull[introa]`);
+    fc.push(`[2:a]${atempoFilters(SPEED_FACTOR)}[extraamain]`);
     fc.push(
       `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=0.2[mainbed]`,
     );
     fc.push(
-      `[extraaintro]atrim=start=${mainDuration.toFixed(3)}:duration=${introDuration.toFixed(3)},volume=0.2[introbed]`,
-    );
-    fc.push(
       `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`,
-    );
-    fc.push(
-      `[introorig][introbed]amix=inputs=2:duration=first:dropout_transition=2[introa]`,
     );
 
     // concat
-    fc.push(`[mainv][maina][introv][introa]concat=n=2:v=1:a=1[outv][outa]`);
+    fc.push(
+      `[${hasLogo ? "mainvwithlogo" : "mainv"}][maina][introv][introa]concat=n=2:v=1:a=1[outv][outa]`,
+    );
 
     const filterComplex = fc.join(";");
 
     let lastLoggedPercent = -1;
+    const outputOptions = [
+      "-map",
+      "[outv]",
+      "-map",
+      "[outa]",
+      "-c:v",
+      "libx264",
+      "-crf",
+      CRF,
+      "-preset",
+      X264_PRESET,
+      "-threads",
+      "0",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "192k",
+      "-r",
+      String(OUTPUT_FPS),
+      "-pix_fmt",
+      "yuv420p",
+      "-movflags",
+      "+faststart",
+      "-map_metadata",
+      "-1",
+      "-metadata",
+      `title=${metadataTitle}`,
+      "-metadata",
+      `description=${metadataDescription}`,
+      "-metadata",
+      "comment=Produced by NHRepon",
+      "-metadata",
+      "artist=Md. Nur Hossain Repon",
+      "-metadata",
+      "album_artist=Md. Nur Hossain Repon",
+      "-metadata",
+      "publisher=NHRepon",
+      "-metadata",
+      "genre=Movie Clips",
+      "-metadata",
+      "language=en",
+      "-metadata",
+      "encoder=Lavf/NHRepon Video Processor",
+      "-metadata",
+      "composer=NHRepon",
+      "-metadata",
+      "album=Movie Clip Collection",
+      "-metadata",
+      "track=1",
+      "-metadata",
+      "network=NHRepon",
+      "-metadata",
+      "synopsis=Cinematic movie clip created for social sharing and short-form video publishing.",
+      "-metadata",
+      `keywords=${metadataKeywords}`,
+      "-metadata",
+      `date=${new Date().toISOString().slice(0, 10)}`,
+      "-metadata",
+      "copyright=NHRepon",
+    ];
 
-    command
-      .complexFilter(filterComplex)
-      .outputOptions([
-        "-map",
-        "[outv]",
-        "-map",
-        "[outa]",
-        "-c:v",
-        "libx264",
-        "-crf",
-        CRF,
-        "-preset",
-        X264_PRESET,
-        "-threads",
-        "0",
-        "-c:a",
-        "aac",
-        "-b:a",
-        "192k",
-        "-r",
-        String(OUTPUT_FPS),
-        "-pix_fmt",
-        "yuv420p",
-        "-movflags",
-        "+faststart",
-        "-map_metadata",
-        "-1",
-        "-metadata",
-        "title=Md. Nur Hossain Repon Original Video",
-        "-metadata",
-        "comment=Produced by NHRepon",
-        "-metadata",
-        "artist=Md. Nur Hossain Repon",
-      ])
-      .output(outputVideo)
-      .on("start", (cmdline) => console.log("FFmpeg started:", cmdline))
-      .on("progress", (progress) => {
-        const elapsed = timemarkToSeconds(progress.timemark);
-        if (elapsed === null || totalDuration <= 0) return;
-        const safeTotal = Math.max(totalDuration, elapsed, 0.001);
-        const percent = Math.min((elapsed / safeTotal) * 100, 99.4);
-        const rounded = Math.floor(percent);
-        if (rounded <= lastLoggedPercent) return;
-        lastLoggedPercent = rounded;
-        console.log(`Progress: ${percent.toFixed(1)}%`);
-      })
-      .on("end", async () => {
-        try {
-          const hash = await fileSha256Hex(outputVideo);
-          console.log("Progress: 100.0%");
-          console.log("\nDone!");
-          console.log(`Output: ${outputVideo} (1080x1080 square)`);
-          console.log(`SHA256: ${hash}`);
-        } catch (err) {
-          console.log(
-            "Completed but failed to hash output:",
-            err.message || err,
-          );
-        }
-      })
-      .on("error", (err, stdout, stderr) => {
-        console.error("Error:", err && err.message ? err.message : err);
-        if (stderr) console.error(stderr);
-      })
-      .run();
+    return new Promise((resolve, reject) => {
+      command
+        .complexFilter(filterComplex)
+        .outputOptions(...outputOptions)
+        .output(outputVideo)
+        .on("start", (cmdline) => console.log("FFmpeg started:", cmdline))
+        .on("progress", (progress) => {
+          const elapsed = timemarkToSeconds(progress.timemark);
+          if (elapsed === null || totalDuration <= 0) return;
+          const safeTotal = Math.max(totalDuration, elapsed, 0.001);
+          const percent = Math.min((elapsed / safeTotal) * 100, 99.4);
+          const rounded = Math.floor(percent);
+          if (rounded <= lastLoggedPercent) return;
+          lastLoggedPercent = rounded;
+          console.log(`Progress: ${percent.toFixed(1)}%`);
+        })
+        .on("end", async () => {
+          try {
+            const hash = await fileSha256Hex(outputVideo);
+            console.log("Progress: 100.0%");
+            console.log("\nDone!");
+            console.log(`Output: ${outputVideo}`);
+            console.log(`SHA256: ${hash}`);
+            resolve(outputVideo);
+          } catch (err) {
+            reject(err);
+          }
+        })
+        .on("error", (err, stdout, stderr) => {
+          console.error("Error:", err && err.message ? err.message : err);
+          if (stderr) console.error(stderr);
+          reject(err);
+        })
+        .run();
+    });
   }
 
-  processVideo().catch((err) => {
-    console.error("Fatal:", err && err.message ? err.message : err);
-    process.exit(1);
-  });
+  return processVideo();
 }
 
 const inputDir = path.join(__dirname, "input");

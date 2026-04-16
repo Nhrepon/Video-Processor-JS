@@ -281,7 +281,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       );
 
       fc.push(
-        `[1:a]${atempoFilters(SPEED_FACTOR)},atrim=duration=${introDuration.toFixed(3)},volume=1.0[introorig]`,
+        `[1:a]${atempoFilters(SPEED_FACTOR)},atrim=duration=${introDuration.toFixed(3)},volume=${ORIGINAL_AUDIO_VOLUME}[introorig]`,
       );
       fc.push(
         `[2:a]${atempoFilters(SPEED_FACTOR)},asplit=2[extraamain][extraaintro]`,
@@ -381,6 +381,8 @@ async function splitVideo({
   partMinutes = 5,
 }) {
   const partSeconds = partMinutes * 60;
+  const MIN_PART_DURATION_SECONDS = 30;
+  const MIN_INPUT_DURATION_SECONDS = 30;
 
   const getDuration = (filePath) =>
     new Promise((resolve, reject) => {
@@ -400,9 +402,42 @@ async function splitVideo({
       });
     });
 
+  const extendVideoToMinimumDuration = ({
+    sourcePath,
+    sourceDuration,
+    outputPath,
+  }) =>
+    new Promise((resolve, reject) => {
+      const safeSourceDuration = Math.max(sourceDuration, 0.001);
+      const loopCount =
+        Math.ceil(MIN_INPUT_DURATION_SECONDS / safeSourceDuration) - 1;
+
+      ffmpeg()
+        .input(sourcePath)
+        .inputOptions(["-stream_loop", String(Math.max(loopCount, 0))])
+        .outputOptions([
+          "-c:v",
+          "libx264",
+          "-preset",
+          "fast",
+          "-crf",
+          "23",
+          "-c:a",
+          "aac",
+          "-b:a",
+          "192k",
+          "-movflags",
+          "+faststart",
+        ])
+        .output(outputPath)
+        .on("end", () => resolve(outputPath))
+        .on("error", reject)
+        .run();
+    });
+
   const cutPart = ({ startSeconds, durationSeconds, outputPath }) =>
     new Promise((resolve, reject) => {
-      ffmpeg(inputVideo)
+      ffmpeg(sourceVideo)
         .setStartTime(startSeconds)
         .duration(durationSeconds)
         .outputOptions([
@@ -432,51 +467,92 @@ async function splitVideo({
   fs.mkdirSync(tempPartsDir, { recursive: true });
   fs.mkdirSync(processedOutputDir, { recursive: true });
 
-  const totalDuration = await getDuration(inputVideo);
+  let sourceVideo = inputVideo;
+  let extendedVideoPath = null;
+  let totalDuration = await getDuration(inputVideo);
+
+  if (totalDuration < MIN_INPUT_DURATION_SECONDS) {
+    const inputExt = path.extname(inputVideo) || ".mp4";
+    const inputBaseName = path.basename(inputVideo, inputExt);
+    const repeatCount = Math.ceil(MIN_INPUT_DURATION_SECONDS / totalDuration);
+    extendedVideoPath = path.join(
+      tempPartsDir,
+      `${inputBaseName}-extended-looped.mp4`,
+    );
+
+    console.log(
+      `Input is ${totalDuration.toFixed(2)}s, looping ${repeatCount}x so it goes over ${MIN_INPUT_DURATION_SECONDS}s before processing`,
+    );
+
+    await extendVideoToMinimumDuration({
+      sourcePath: inputVideo,
+      sourceDuration: totalDuration,
+      outputPath: extendedVideoPath,
+    });
+
+    sourceVideo = extendedVideoPath;
+    totalDuration = await getDuration(sourceVideo);
+  }
+
   const totalParts = Math.ceil(totalDuration / partSeconds);
-  const ext = path.extname(inputVideo) || ".mp4";
-  const baseName = path.basename(inputVideo, ext);
+  const ext = ".mp4"; //path.extname(inputVideo) ||
+  const baseName = path.basename(sourceVideo, ext);
   const processedFiles = [];
 
-  for (let index = 0; index < totalParts; index += 1) {
-    const startSeconds = index * partSeconds;
-    const durationSeconds = Math.min(partSeconds, totalDuration - startSeconds);
-    const partNumber = String(index + 1).padStart(2, "0");
-    const splitPartPath = path.join(
-      tempPartsDir,
-      `${baseName}-part-${partNumber}${ext}`,
-    );
+  try {
+    for (let index = 0; index < totalParts; index += 1) {
+      const startSeconds = index * partSeconds;
+      const durationSeconds = Math.min(
+        partSeconds,
+        totalDuration - startSeconds,
+      );
+      const partNumber = String(index + 1).padStart(2, "0");
+      const splitPartPath = path.join(
+        tempPartsDir,
+        `${baseName}-part-${partNumber}${ext}`,
+      );
 
-    console.log(
-      `Splitting part ${index + 1}/${totalParts}: ${Math.round(durationSeconds)}s`,
-    );
+      console.log(
+        `Splitting part ${index + 1}/${totalParts}: ${Math.round(durationSeconds)}s`,
+      );
+      if (durationSeconds < MIN_PART_DURATION_SECONDS) {
+        console.log(
+          `Skipping part ${index + 1}/${totalParts}: duration ${durationSeconds.toFixed(2)}s is under ${MIN_PART_DURATION_SECONDS}s`,
+        );
+        continue;
+      }
+      await cutPart({
+        startSeconds,
+        durationSeconds,
+        outputPath: splitPartPath,
+      });
 
-    await cutPart({
-      startSeconds,
-      durationSeconds,
-      outputPath: splitPartPath,
-    });
+      console.log(`Processing split part: ${splitPartPath}`);
 
-    console.log(`Processing split part: ${splitPartPath}`);
+      const processedOutput = await videoProcessor(
+        splitPartPath,
+        processedOutputDir,
+        introDir,
+        assetsDir,
+        audioDir,
+      );
 
-    const processedOutput = await videoProcessor(
-      splitPartPath,
-      processedOutputDir,
-      introDir,
-      assetsDir,
-      audioDir,
-    );
-
-    processedFiles.push({
-      splitPartPath,
-      processedOutput,
-    });
-    const removed = await removeFile(splitPartPath);
-    console.log(
-      removed
-        ? `Removed temp part: ${splitPartPath}`
-        : `Temp part already missing: ${splitPartPath}`,
-    );
+      processedFiles.push({
+        splitPartPath,
+        processedOutput,
+      });
+      const removed = await removeFile(splitPartPath);
+      console.log(
+        removed
+          ? `Removed temp part: ${splitPartPath}`
+          : `Temp part already missing: ${splitPartPath}`,
+      );
+    }
+  } finally {
+    if (extendedVideoPath && fs.existsSync(extendedVideoPath)) {
+      fs.unlinkSync(extendedVideoPath);
+      console.log(`Removed extended temp video: ${extendedVideoPath}`);
+    }
   }
 
   return processedFiles;
