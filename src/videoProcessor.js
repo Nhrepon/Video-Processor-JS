@@ -38,7 +38,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
   const OVERLAY_MIN_GAP = 9;
   const OVERLAY_MAX_GAP = 22;
   const BLUR_STRENGTH = 2;
-
+  const VOICE_PITCH = 0.91;
+  const ORIGINAL_AUDIO_VOLUME = 0.9;
+  const BED_AUDIO_VOLUME = 0.18;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
@@ -276,14 +278,14 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
       "Like, Comment and Share for more videos!",
     );
     fc.push(
-      `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=10:y=10:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
+      `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=3:bordercolor=black:x=10:y=10:fix_bounds=true:enable='gte(t,0)'[maintoptext]`, //box=1:boxcolor=black@0.55:boxborderw=18:
     );
     fc.push(
-      `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=30:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
+      `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=30:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
     );
     if (hasLogo) {
       fc.push(
-        `[${3 + overlayAssets.length}:v]scale=140:-1,format=rgba[mainlogo]`,
+        `[${3 + overlayAssets.length}:v]scale=${130}:-1,format=rgba[mainlogo]`,
       );
       fc.push(`[mainv][mainlogo]overlay=W-w-10:10[mainvwithlogo]`);
     }
@@ -296,13 +298,13 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audio) {
     // Audio
     // fc.push(`[0:a]${atempoFilters(SPEED_FACTOR)},volume=1.0[mainorig]`);
     fc.push(
-      `[0:a]asetrate=44100*1.06,aresample=44100,${atempoFilters(SPEED_FACTOR / 1.06)},volume=1.0[mainorig]`,
+      `[0:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
     );
 
     fc.push(`[1:a]anull[introa]`);
     fc.push(`[2:a]${atempoFilters(SPEED_FACTOR)}[extraamain]`);
     fc.push(
-      `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=0.2[mainbed]`,
+      `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
     );
     fc.push(
       `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`,

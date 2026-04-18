@@ -25,11 +25,11 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const OUTPUT_FPS = 30;
   const X264_PRESET = "fast";
   const CRF = "24";
-  const OVERLAY_OPACITY = 0.07;
+  const OVERLAY_OPACITY = 0.05;
   const OVERLAY_DURATION = 0.8;
   const OVERLAY_MIN_GAP = 9;
   const OVERLAY_MAX_GAP = 20;
-  const BLUR_STRENGTH = 5;
+  const BLUR_STRENGTH = 2;
   const VOICE_PITCH = 0.87;
   const ORIGINAL_AUDIO_VOLUME = 0.9;
   const BED_AUDIO_VOLUME = 0.18;
@@ -258,10 +258,10 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         "Like, Comment and Share for more videos!",
       );
       fc.push(
-        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=120:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=40:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
+        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=92:borderw=2:bordercolor=black:x=20:y=20:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
       );
       fc.push(
-        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
+        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-20:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
       );
 
       // logo

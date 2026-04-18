@@ -9,7 +9,8 @@
     "partfb": "node src/partFB.js",
     "partyt": "node src/partyt.js",
     "reelsfb": "node src/reelsFB.js",
-    "reelsyt": "node src/reelsYT.js"
+    "reelsyt": "node src/reelsYT.js",
+    "shorts": "node src/shorts.js"
   },
   "keywords": [],
   "author": "",
