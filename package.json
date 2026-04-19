@@ -10,7 +10,8 @@
     "partyt": "node src/partyt.js",
     "reelsfb": "node src/reelsFB.js",
     "reelsyt": "node src/reelsYT.js",
-    "shorts": "node src/shorts.js"
+    "shorts": "node src/shorts.js",
+    "nhrepon": "node src/nhrepon.js"
   },
   "keywords": [],
   "author": "",

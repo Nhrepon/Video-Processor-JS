@@ -54,20 +54,6 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     .replace(/\\/g, "\\\\")
     .replace(/:/g, "\\:");
   const logoPath = assetPath("logo.png");
-  const metadataTitle = `${fileBaseName} | Movie Clip`;
-  const metadataDescription =
-    "Movie clip edit featuring cinematic scenes, short highlights, and engaging moments curated for social video audiences.";
-  const metadataKeywords = [
-    "movie clip",
-    "film scene",
-    "cinematic",
-    "viral clip",
-    "short video",
-    "entertainment",
-    "movie highlights",
-    "scene edit",
-    "nhrepon",
-  ].join(",");
 
   function timemarkToSeconds(timemark) {
     if (!timemark) return null;
@@ -245,7 +231,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     inputs.forEach((inp) => addInput(command, inp));
 
     const fc = [];
-    const gradeFilter = "hue=s=0.28,eq=contrast=1.04:brightness=0.01";
+    const gradeFilter = "hue=s=0.48,eq=contrast=1.04:brightness=0.01";
 
     // Main: apply blur on half-res background, foreground at full res
     fc.push(`[0:v]setpts=PTS/${SPEED_FACTOR},split=2[mainA][mainB]`);
@@ -253,7 +239,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       `[mainA]scale=${HALF_SIZE}:${HALF_SIZE}:force_original_aspect_ratio=increase,crop=${HALF_SIZE}:${HALF_SIZE},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_SIZE}:${OUTPUT_SIZE},${gradeFilter}[mainbg]`,
     );
     fc.push(
-      `[mainB]hflip,scale=${OUTPUT_SIZE - 80}:${OUTPUT_SIZE - 80}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
+      `[mainB]scale=${OUTPUT_SIZE - 80}:${OUTPUT_SIZE - 80}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`, //hflip,
     );
     fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
 
@@ -347,9 +333,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-map_metadata",
       "-1",
       "-metadata",
-      `title=${metadataTitle}`,
+      `title=${outputFileName.replace(".mp4", "").replace(/-/g, " ")} - By NHRepon`,
       "-metadata",
-      `description=${metadataDescription}`,
+      "description=Programmed by NHRepon",
       "-metadata",
       "comment=Produced by NHRepon",
       "-metadata",
@@ -359,7 +345,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-metadata",
       "publisher=NHRepon",
       "-metadata",
-      "genre=Movie Clips",
+      "genre=Programming",
       "-metadata",
       "language=en",
       "-metadata",
@@ -367,15 +353,13 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-metadata",
       "composer=NHRepon",
       "-metadata",
-      "album=Movie Clip Collection",
+      "album=NHRepon",
       "-metadata",
       "track=1",
       "-metadata",
       "network=NHRepon",
       "-metadata",
-      "synopsis=Cinematic movie clip created for social sharing and short-form video publishing.",
-      "-metadata",
-      `keywords=${metadataKeywords}`,
+      `keywords=${("NHRepon", "Programming", "NextJS web development", "React", "NodeJS", "TailwindCSS", "Mobile Application Development", "Flutter")}`,
       "-metadata",
       `date=${new Date().toISOString().slice(0, 10)}`,
       "-metadata",
@@ -565,7 +549,7 @@ async function run() {
       introDir,
       assetsDir,
       audioDir,
-      partMinutes: 4,
+      partMinutes: 20,
     });
 
     console.log(`Finished ${path.basename(inputVideo)}`);

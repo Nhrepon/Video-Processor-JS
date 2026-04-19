@@ -487,8 +487,8 @@ const inputDir = path.join(__dirname, "input");
 const introDir = path.join(__dirname, "intro");
 const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
-const partDir = path.join(__dirname, "parts");
-const partOutputDir = path.join(__dirname, "partOutput");
+const partDir = path.join(__dirname, "output/parts");
+const partOutputDir = path.join(__dirname, "output/partOutput");
 
 async function run() {
   const inputFiles = fs
