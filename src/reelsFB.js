@@ -4,14 +4,12 @@ const ffprobePath = require("@ffprobe-installer/ffprobe").path;
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { getDuration, reverseVideo, mergeVideo } = require("./utility/utility");
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
 function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
-  ffmpeg.setFfmpegPath(ffmpegPath);
-  ffmpeg.setFfprobePath(ffprobePath);
-
   const SPEED_FACTOR = 1.05;
   const OUTPUT_WIDTH = 1080;
   const OUTPUT_HEIGHT = 1920;
@@ -20,11 +18,11 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const OUTPUT_FPS = 30;
   const X264_PRESET = "fast";
   const CRF = "24";
-  const OVERLAY_OPACITY = 0.2;
+  const OVERLAY_OPACITY = 0.1;
   const OVERLAY_DURATION = 1.0;
-  const OVERLAY_MIN_GAP = 5;
-  const OVERLAY_MAX_GAP = 12;
-  const BLUR_STRENGTH = 10;
+  const OVERLAY_MIN_GAP = 9;
+  const OVERLAY_MAX_GAP = 22;
+  const BLUR_STRENGTH = 6;
   const VOICE_PITCH = 0.91;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
@@ -189,14 +187,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       }
 
       const mainOrigDur = await getMediaDuration(inputVideo);
-      // const [mainOrigDur, introOrigDur] = await Promise.all([
-      //   getMediaDuration(inputVideo),
-      //   getMediaDuration(introVideo),
-      // ]);
 
       const mainDuration = mainOrigDur / SPEED_FACTOR;
       const totalDuration = mainDuration;
-      // const introDuration = introOrigDur / SPEED_FACTOR;
       const overlays = buildOverlayPlan(mainDuration, overlayAssets.length);
 
       console.log(`Using ${overlayAssets.length} overlay asset(s)`);
@@ -207,7 +200,6 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         { path: extraAudio, type: "audio" },
         ...overlayAssets,
         { path: logoPath, type: "image" },
-        // { path: introVideo, type: "video" },
       ];
 
       const command = ffmpeg();
@@ -221,7 +213,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[mainbg]`,
       );
       fc.push(
-        `[mainB]hflip,scale=${1080}:${1080}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
+        `[mainB]hflip,scale=${OUTPUT_WIDTH}:${900}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
       );
       fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
 
@@ -245,10 +237,10 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         "Like, Comment and Share for more videos!",
       );
       fc.push(
-        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=120:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
+        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=90:borderw=2:bordercolor=black:x=20:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
       );
       fc.push(
-        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
+        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-20:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
       );
 
       // logo
@@ -256,47 +248,16 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         `[${2 + overlayAssets.length}:v]scale=${150}:-1,format=rgba[mainlogo]`,
       );
       fc.push(`[maintexted][mainlogo]overlay=W-w-${10}:${10}[mainv]`);
-      // Intro processing kept for later reuse.
-      // fc.push(`[1:v]setpts=PTS/${SPEED_FACTOR},split=2[introA][introB]`);
-      // fc.push(
-      //   `[introA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[introbg]`,
-      // );
-      // fc.push(
-      //   `[introB]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,${gradeFilter}[introfg]`,
-      // );
-      // fc.push(`[introbg][introfg]overlay=(W-w)/2:(H-h)/2[introbase]`);
-      // fc.push(
-      //   `[introbase]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=90:fix_bounds=true:enable='gte(t,0)'[introtoptext]`,
-      // );
-      // fc.push(
-      //   `[introtoptext]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-90:fix_bounds=true:enable='gte(t,0)',setsar=1[introv]`,
-      // );
 
       fc.push(
-        `[0:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=1.0[mainorig]`,
+        `[0:a?]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=1.0[mainorig]`,
       );
       fc.push(
-        `[1:a]${atempoFilters(SPEED_FACTOR)},atrim=duration=${mainDuration.toFixed(3)},volume=0.2[mainbed]`,
+        `[1:a?]${atempoFilters(SPEED_FACTOR)},atrim=duration=${mainDuration.toFixed(3)},volume=0.2[mainbed]`,
       );
       fc.push(
-        `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`,
+        `[mainorig][mainbed]amix=inputs=2:duration=longest:dropout_transition=2[maina]`,
       );
-      // fc.push(
-      //   `[1:a]${atempoFilters(SPEED_FACTOR)},asplit=2[extraamain][extraaintro]`,
-      // );
-      // fc.push(
-      //   `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=0.2[mainbed]`,
-      // );
-      // fc.push(
-      //   `[1:a]${atempoFilters(SPEED_FACTOR)},atrim=duration=${introDuration.toFixed(3)},volume=1.0[introorig]`,
-      // );
-      // fc.push(
-      //   `[extraaintro]atrim=start=${mainDuration.toFixed(3)}:duration=${introDuration.toFixed(3)},volume=0.2[introbed]`,
-      // );
-      // fc.push(
-      //   `[introorig][introbed]amix=inputs=2:duration=first:dropout_transition=2[introa]`,
-      // );
-      // fc.push(`[mainv][maina][introv][introa]concat=n=2:v=1:a=1[outv][outa]`);
 
       const filterComplex = fc.join(";");
       let lastLoggedPercent = -1;
@@ -305,9 +266,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         .complexFilter(filterComplex)
         .outputOptions([
           "-map",
-          "[mainv]", // "[outv]",
+          "[mainv]",
           "-map",
-          "[maina]", //"[outa]",
+          "[maina]",
           "-c:v",
           "libx264",
           "-crf",
@@ -329,7 +290,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
           "-map_metadata",
           "-1",
           "-metadata",
-          "title=Md. Nur Hossain Repon Original Video",
+          "title=Md. Nur Hossain Repon shorts video",
           "-metadata",
           "comment=Produced by NHRepon",
           "-metadata",
@@ -369,6 +330,181 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   });
 }
 
+// async function splitVideo({
+//   inputVideo,
+//   tempPartsDir,
+//   processedOutputDir,
+//   introDir,
+//   assetsDir,
+//   audioDir,
+//   partMinutes = 5,
+// }) {
+//   const PART_SECONDS = partMinutes * 60;
+//   const MIN_PART_DURATION = 30;
+//   const MIN_INPUT_DURATION = 30;
+
+//   if (!inputVideo || !fs.existsSync(inputVideo)) {
+//     throw new Error(`Input video not found: ${inputVideo}`);
+//   }
+
+//   fs.mkdirSync(tempPartsDir, { recursive: true });
+//   fs.mkdirSync(processedOutputDir, { recursive: true });
+
+//   // ---------- helpers ----------
+
+//   const getDuration = (filePath) =>
+//     new Promise((resolve, reject) => {
+//       ffmpeg.ffprobe(filePath, (err, metadata) => {
+//         if (err) return reject(err);
+//         const d = Number(metadata?.format?.duration);
+//         if (!Number.isFinite(d)) {
+//           return reject(new Error(`Invalid duration: ${filePath}`));
+//         }
+//         resolve(d);
+//       });
+//     });
+
+//   const cutPart = ({ source, start, duration, output }) =>
+//     new Promise((resolve, reject) => {
+//       ffmpeg(source)
+//         .setStartTime(start)
+//         .duration(duration)
+//         .outputOptions([
+//           "-c:v libx264",
+//           "-preset fast",
+//           "-crf 23",
+//           "-c:a aac",
+//           "-b:a 192k",
+//           "-movflags +faststart",
+//           "-y",
+//         ])
+//         .output(output)
+//         .on("end", () => resolve(output))
+//         .on("error", reject)
+//         .run();
+//     });
+
+//   const extendToMinDuration = async (sourcePath, outputPath) => {
+//     let reversed, merged;
+
+//     try {
+//       reversed = await reverseVideo(sourcePath);
+
+//       merged = await mergeVideo(sourcePath, reversed, tempPartsDir);
+
+//       const duration = await getDuration(merged);
+//       const safe = Math.max(duration, 0.001);
+
+//       const loops = Math.ceil(MIN_INPUT_DURATION / safe) - 1;
+
+//       return await new Promise((resolve, reject) => {
+//         ffmpeg(merged)
+//           .inputOptions(["-stream_loop", String(Math.max(loops, 0))])
+//           .outputOptions([
+//             "-t", String(MIN_INPUT_DURATION), // ✅ force exact duration
+//             "-c:v libx264",
+//             "-preset fast",
+//             "-crf 23",
+//             "-c:a aac",
+//             "-b:a 192k",
+//             "-movflags +faststart",
+//             "-y",
+//           ])
+//           .output(outputPath)
+//           .on("end", () => resolve(outputPath))
+//           .on("error", reject)
+//           .run();
+//       });
+
+//     } finally {
+//       // cleanup temp files
+//       [reversed, merged].forEach((file) => {
+//         if (file && fs.existsSync(file)) {
+//           try { fs.unlinkSync(file); } catch {}
+//         }
+//       });
+//     }
+//   };
+
+//   // ---------- main flow ----------
+
+//   let sourceVideo = inputVideo;
+//   let extendedPath = null;
+
+//   let totalDuration = await getDuration(sourceVideo);
+
+//   if (totalDuration < MIN_INPUT_DURATION) {
+//     const base = path.basename(inputVideo, path.extname(inputVideo))
+//       .replace(/[^\w\-]/g, "_");
+
+//     extendedPath = path.join(
+//       tempPartsDir,
+//       `${base}-extended.mp4`
+//     );
+
+//     console.log(
+//       `Extending short video (${totalDuration.toFixed(2)}s → ${MIN_INPUT_DURATION}s)`
+//     );
+
+//     sourceVideo = await extendToMinDuration(inputVideo, extendedPath);
+//     totalDuration = await getDuration(sourceVideo);
+//   }
+
+//   const totalParts = Math.ceil(totalDuration / PART_SECONDS);
+//   const baseName = path.basename(sourceVideo, path.extname(sourceVideo))
+//     .replace(/[^\w\-]/g, "_");
+
+//   const results = [];
+
+//   try {
+//     for (let i = 0; i < totalParts; i++) {
+//       const start = i * PART_SECONDS;
+//       const duration = Math.min(PART_SECONDS, totalDuration - start);
+
+//       if (duration < MIN_PART_DURATION) {
+//         console.log(`Skipping part ${i + 1} (too short: ${duration}s)`);
+//         continue;
+//       }
+
+//       const partPath = path.join(
+//         tempPartsDir,
+//         `${baseName}-part-${String(i + 1).padStart(2, "0")}.mp4`
+//       );
+
+//       console.log(`Cutting part ${i + 1}/${totalParts} (${duration}s)`);
+
+//       await cutPart({
+//         source: sourceVideo,
+//         start,
+//         duration,
+//         output: partPath,
+//       });
+
+//       console.log(`Processing: ${partPath}`);
+
+//       const processed = await videoProcessor(
+//         partPath,
+//         processedOutputDir,
+//         introDir,
+//         assetsDir,
+//         audioDir
+//       );
+
+//       results.push({ partPath, processed });
+//     }
+
+//   } finally {
+//     if (extendedPath && fs.existsSync(extendedPath)) {
+//       try {
+//         fs.unlinkSync(extendedPath);
+//         console.log(`Cleaned: ${extendedPath}`);
+//       } catch {}
+//     }
+//   }
+
+//   return results;
+// }
+
 async function splitVideo({
   inputVideo,
   tempPartsDir,
@@ -381,61 +517,61 @@ async function splitVideo({
   const partSeconds = partMinutes * 60;
   const MIN_PART_DURATION_SECONDS = 30;
   const MIN_INPUT_DURATION_SECONDS = 30;
+  fs.mkdirSync(tempPartsDir, { recursive: true });
+  fs.mkdirSync(processedOutputDir, { recursive: true });
+  let sourceVideo = inputVideo;
+  let extendedVideoPath = null;
+  let totalDuration = await getDuration(inputVideo);
+  let cleanUp = [];
 
-  const getDuration = (filePath) =>
-    new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(filePath, (error, metadata) => {
-        if (error) {
-          reject(new Error(`ffprobe failed for ${filePath}: ${error.message}`));
-          return;
-        }
+  async function extendVideoToMinimumDuration({ sourcePath, outputPath }) {
+    let reverseVideoPath;
+    let concateVideo;
 
-        const duration = Number(metadata?.format?.duration);
-        if (!Number.isFinite(duration)) {
-          reject(new Error(`Could not get video duration for ${filePath}`));
-          return;
-        }
+    try {
+      reverseVideoPath = await reverseVideo(sourcePath, outputPath);
+      console.log("Reverse video path:", reverseVideoPath);
+      cleanUp.push(reverseVideoPath);
+      concateVideo = await mergeVideo(
+        sourcePath,
+        reverseVideoPath,
+        outputPath,
+      );
+      console.log("Concate video path:", concateVideo);
+      cleanUp.push(concateVideo);
+      const concateDuration = await getDuration(concateVideo);
+      console.log("Concate video duration:", concateDuration);
+      const safeDuration = Math.max(concateDuration, 0.001);
 
-        resolve(duration);
-      });
-    });
-
-  const extendVideoToMinimumDuration = ({
-    sourcePath,
-    sourceDuration,
-    outputPath,
-  }) =>
-    new Promise((resolve, reject) => {
-      const safeSourceDuration = Math.max(sourceDuration, 0.001);
       const loopCount =
-        Math.ceil(MIN_INPUT_DURATION_SECONDS / safeSourceDuration) - 1;
+        Math.ceil(MIN_INPUT_DURATION_SECONDS / safeDuration) - 1;
 
-      ffmpeg()
-        .input(sourcePath)
-        .inputOptions(["-stream_loop", String(Math.max(loopCount, 0))])
-        .outputOptions([
-          "-c:v",
-          "libx264",
-          "-preset",
-          "fast",
-          "-crf",
-          "23",
-          "-c:a",
-          "aac",
-          "-b:a",
-          "192k",
-          "-movflags",
-          "+faststart",
-        ])
-        .output(outputPath)
-        .on("end", () => resolve(outputPath))
-        .on("error", reject)
-        .run();
-    });
+      return await new Promise((resolve, reject) => {
+        ffmpeg()
+          .input(concateVideo)
+          .inputOptions(["-stream_loop", String(Math.max(loopCount, 0))])
+          .outputOptions([
+            "-c:v libx264",
+            "-preset fast",
+            "-crf 23",
+            "-c:a aac",
+            "-b:a 192k",
+            "-movflags +faststart",
+            "-y",
+          ])
+          .output(outputPath)
+          .on("end", () => resolve((extendedVideoPath = outputPath)))
+          .on("error", reject)
+          .run();
+      });
+    } finally {
+      console.log("✅ Extend video to minimum duration process completed");
+    }
+  }
 
   const cutPart = ({ startSeconds, durationSeconds, outputPath }) =>
     new Promise((resolve, reject) => {
-      ffmpeg(sourceVideo)
+      ffmpeg(extendedVideoPath)
         .setStartTime(startSeconds)
         .duration(durationSeconds)
         .outputOptions([
@@ -453,21 +589,14 @@ async function splitVideo({
           "+faststart",
         ])
         .output(outputPath)
-        .on("end", resolve)
+        .on("end", (code) => resolve(code))
         .on("error", reject)
         .run();
     });
 
-  if (!inputVideo || !fs.existsSync(inputVideo)) {
-    throw new Error(`Input video not found: ${inputVideo}`);
+  if (!cutPart || !fs.existsSync(tempPartsDir)) {
+    throw new Error(`Temp parts directory not found: ${tempPartsDir}`);
   }
-
-  fs.mkdirSync(tempPartsDir, { recursive: true });
-  fs.mkdirSync(processedOutputDir, { recursive: true });
-
-  let sourceVideo = inputVideo;
-  let extendedVideoPath = null;
-  let totalDuration = await getDuration(inputVideo);
 
   if (totalDuration < MIN_INPUT_DURATION_SECONDS) {
     const inputExt = path.extname(inputVideo) || ".mp4";
@@ -539,12 +668,16 @@ async function splitVideo({
         splitPartPath,
         processedOutput,
       });
+      cleanUp.push(splitPartPath);
+      cleanUp.push(extendedVideoPath)
     }
   } finally {
-    if (extendedVideoPath && fs.existsSync(extendedVideoPath)) {
-      fs.unlinkSync(extendedVideoPath);
-      console.log(`Removed extended temp video: ${extendedVideoPath}`);
-    }
+    cleanUp.forEach((file) => {
+      if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+        console.log(`Removed temp file: ${file}`);
+      }
+    });
   }
 
   return processedFiles;
@@ -554,8 +687,8 @@ const inputDir = path.join(__dirname, "input");
 const introDir = path.join(__dirname, "intro");
 const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
-const partDir = path.join(__dirname, "parts");
-const partOutputDir = path.join(__dirname, "partOutput/reelsFB");
+const partDir = path.join(__dirname, "output/parts");
+const partOutputDir = path.join(__dirname, "output/partOutput/reelsFB");
 
 async function run() {
   const inputFiles = fs
@@ -570,7 +703,7 @@ async function run() {
   for (const inputVideo of inputFiles) {
     const results = await splitVideo({
       inputVideo,
-      tempPartsDir: partDir,
+      tempPartsDir:partDir,
       processedOutputDir: partOutputDir,
       introDir,
       assetsDir,
@@ -578,7 +711,7 @@ async function run() {
       partMinutes: 0.8,
     });
 
-    console.log(`Finished ${path.basename(inputVideo)}`);
+    console.log(`Finished video processing: ${path.basename(inputVideo)}`);
     // console.log(results);
     console.log(`Total ${results.length} video processed...`);
   }

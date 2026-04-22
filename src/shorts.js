@@ -13,7 +13,14 @@ const {
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
-function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, audioDir) {
+function videoProcessor(
+  videoPath,
+  outputDir,
+  tempPartDir,
+  introDir,
+  assetsDir,
+  audioDir,
+) {
   ffmpeg.setFfmpegPath(ffmpegPath);
   ffmpeg.setFfprobePath(ffprobePath);
 
@@ -22,7 +29,7 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
   const OUTPUT_HEIGHT = 1920;
   const SCALE_HEIGHT = 1550;
   const ENABLE_OBJECT_TRACKING = true; // Set to true to enable object tracking
-  const TRACKING_SENSITIVITY = 0.5; // 0.1 to 1.0, higher = more sensitive
+  const TRACKING_SENSITIVITY = 0.7; // 0.1 to 1.0, higher = more sensitive
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
   const HALF_HEIGHT = Math.floor(OUTPUT_HEIGHT / 2);
   const OUTPUT_FPS = 30;
@@ -33,7 +40,7 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
   const OVERLAY_MIN_GAP = 9;
   const OVERLAY_MAX_GAP = 22;
   const BLUR_STRENGTH = 8;
-  const VOICE_PITCH = 0.91;
+  const VOICE_PITCH = 0.88;
   const ORIGINAL_AUDIO_VOLUME = 0.9;
   const BED_AUDIO_VOLUME = 0.18;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
@@ -192,10 +199,10 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
 
       const inputVideo = videoPath;
       const audioFiles = getAudioFiles(audioDir);
-    const extraAudio =
-      audioFiles.length > 0
-        ? audioFiles[getRandomNumber(0, audioFiles.length - 1)]
-        : audioFiles[0];
+      const extraAudio =
+        audioFiles.length > 0
+          ? audioFiles[getRandomNumber(0, audioFiles.length - 1)]
+          : audioFiles[0];
       const randomId = Math.floor(Math.random() * 99999) + 1;
       const outputFileName =
         `${fileBaseName}-${randomId}-by-nhrepon.mp4`.replace(/\s+/g, "-");
@@ -223,9 +230,11 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
 
       console.log(`Using ${overlayAssets.length} overlay asset(s)`);
       console.log(`Inserting ${overlays.length} random overlay segment(s)`);
-      
+
       if (ENABLE_OBJECT_TRACKING) {
-        console.log(`Object tracking ENABLED with sensitivity: ${TRACKING_SENSITIVITY}`);
+        console.log(
+          `Object tracking ENABLED with sensitivity: ${TRACKING_SENSITIVITY}`,
+        );
       } else {
         console.log(`Object tracking DISABLED`);
       }
@@ -249,12 +258,12 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
         fc.push(
           `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[mainbg]`,
         );
-        
+
         // Scale to fill frame completely, then crop to exact dimensions
         fc.push(
-          `[mainB]scale=${OUTPUT_WIDTH}:${SCALE_HEIGHT}:force_original_aspect_ratio=increase,${gradeFilter},crop=${OUTPUT_WIDTH}:${SCALE_HEIGHT},cropdetect=${Math.floor(TRACKING_SENSITIVITY * 20)}:${Math.floor(TRACKING_SENSITIVITY * 20)}:reset=1,drawbox=enable='between(t,0,999)':color=red@0.3:thickness=1[mainfg]`
+          `[mainB]scale=${OUTPUT_WIDTH}:${SCALE_HEIGHT}:force_original_aspect_ratio=increase,${gradeFilter},crop=${OUTPUT_WIDTH}:${SCALE_HEIGHT},cropdetect=${Math.floor(TRACKING_SENSITIVITY * 20)}:${Math.floor(TRACKING_SENSITIVITY * 20)}:reset=1,drawbox=enable='between(t,0,999)':color=red@0.3:thickness=1[mainfg]`,
         );
-        
+
         fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
       } else {
         // Original processing without tracking
@@ -299,7 +308,6 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
         `[${2 + overlayAssets.length}:v]scale=${150}:-1,format=rgba[mainlogo]`,
       );
       fc.push(`[maintexted][mainlogo]overlay=W-w-${10}:${10}[mainv]`);
-      
 
       fc.push(
         `[0:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
@@ -310,7 +318,6 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
       fc.push(
         `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`,
       );
-      
 
       const filterComplex = fc.join(";");
       let lastLoggedPercent = -1;
@@ -319,7 +326,7 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
         .complexFilter(filterComplex)
         .outputOptions([
           "-map",
-          "[mainv]", 
+          "[mainv]",
           "-map",
           "[maina]",
           "-c:v",
@@ -341,53 +348,52 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
           "-movflags",
           "+faststart",
           "-map_metadata",
-      "-1",
-      "-metadata",
-      `title=${metadataTitle}`,
-      "-metadata",
-      `description=${metadataDescription}`,
-      "-metadata",
-      "comment=Produced by NHRepon",
-      "-metadata",
-      "artist=Md. Nur Hossain Repon",
-      "-metadata",
-      "album_artist=Md. Nur Hossain Repon",
-      "-metadata",
-      "publisher=NHRepon",
-      "-metadata",
-      "genre=Cartoon",
-      "-metadata",
-      "language=en",
-      "-metadata",
-      "encoder=Lavf/NHRepon Video Processor",
-      "-metadata",
-      "composer=NHRepon",
-      "-metadata",
-      "album=Cartoon",
-      "-metadata",
-      "track=1",
-      "-metadata",
-      "network=NHRepon",
-      "-metadata",
-      "synopsis=Cartoon clip created for social sharing and short-form video publishing.",
-      "-metadata",
-      `keywords=${metadataKeywords}`,
-      "-metadata",
-      `date=${new Date().toISOString().slice(0, 10)}`,
-      "-metadata",
-      "copyright=NHRepon",
-      "-metadata",
-      "subtitle=Cartoon",
-      "-metadata",
-      "rating=PG",
-      "-metadata",
-      "publisher_url=https://nhrepon.com",
-      "-metadata",
-      "encoder_version=1.0",
-
+          "-1",
+          "-metadata",
+          `title=${metadataTitle}`,
+          "-metadata",
+          `description=${metadataDescription}`,
+          "-metadata",
+          "comment=Produced by NHRepon",
+          "-metadata",
+          "artist=Md. Nur Hossain Repon",
+          "-metadata",
+          "album_artist=Md. Nur Hossain Repon",
+          "-metadata",
+          "publisher=NHRepon",
+          "-metadata",
+          "genre=Cartoon",
+          "-metadata",
+          "language=en",
+          "-metadata",
+          "encoder=Lavf/NHRepon Video Processor",
+          "-metadata",
+          "composer=NHRepon",
+          "-metadata",
+          "album=Cartoon",
+          "-metadata",
+          "track=1",
+          "-metadata",
+          "network=NHRepon",
+          "-metadata",
+          "synopsis=Cartoon clip created for social sharing and short-form video publishing.",
+          "-metadata",
+          `keywords=${metadataKeywords}`,
+          "-metadata",
+          `date=${new Date().toISOString().slice(0, 10)}`,
+          "-metadata",
+          "copyright=NHRepon",
+          "-metadata",
+          "subtitle=Cartoon",
+          "-metadata",
+          "rating=PG",
+          "-metadata",
+          "publisher_url=https://nhrepon.com",
+          "-metadata",
+          "encoder_version=1.0",
         ])
         .output(outputVideo)
-        .on("start", (cmdline) => console.log("FFmpeg started:", cmdline))
+        .on("start", (cmdline) => console.log("FFmpeg started:", "cmdline"))
         .on("progress", (progress) => {
           const elapsed = timemarkToSeconds(progress.timemark);
           if (elapsed === null || totalDuration <= 0) return;
@@ -402,10 +408,12 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
           try {
             const hash = await fileSha256Hex(outputVideo);
             console.log("Progress: 100.0%");
-            console.log(`Output: ${outputVideo} ( ${OUTPUT_WIDTH}x${OUTPUT_HEIGHT} )`);
+            console.log(
+              `Output: ${outputVideo} ( ${OUTPUT_WIDTH}x${OUTPUT_HEIGHT} )`,
+            );
             console.log(`SHA256: ${hash}`);
             console.log("Video processed successfully");
-            
+
             // Split the processed video into parts
             const results = await splitVideo({
               inputVideo: outputVideo,
@@ -413,9 +421,8 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
               processedOutputDir: outputDir,
             });
             console.log(`Split into ${results.length} parts`);
-            
+
             resolve(outputVideo);
-            
           } catch (err) {
             reject(err);
           }
@@ -431,11 +438,7 @@ function videoProcessor(videoPath, outputDir, tempPartDir, introDir, assetsDir, 
   });
 }
 
-async function splitVideo({
-  inputVideo,
-  tempPartsDir,
-  processedOutputDir
-}) {
+async function splitVideo({ inputVideo, tempPartsDir, processedOutputDir }) {
   const MIN_PART_DURATION_SECONDS = 5;
 
   const getDuration = (filePath) =>
@@ -454,7 +457,6 @@ async function splitVideo({
         resolve(duration);
       });
     });
-
 
   const cutPart = ({ startSeconds, durationSeconds, outputPath }) =>
     new Promise((resolve, reject) => {
@@ -497,26 +499,23 @@ async function splitVideo({
 
   let startSeconds = 0;
   let partIndex = 0;
-  
+
   while (startSeconds < totalDuration) {
     partIndex++;
-    let partSeconds = getRandomNumber(5, 19);
-    const durationSeconds = Math.min(
-      partSeconds,
-      totalDuration - startSeconds,
+    let partSeconds = getRandomNumber(10, 49);
+    const durationSeconds = Math.min(partSeconds, totalDuration - startSeconds);
+
+    console.log(
+      `Part ${partIndex}: ${durationSeconds}s (random: ${partSeconds}s)`,
     );
-    
-    console.log(`Part ${partIndex}: ${durationSeconds}s (random: ${partSeconds}s)`);
     const partNumber = String(partIndex).padStart(2, "0");
     const splitPartPath = path.join(
       processedOutputDir,
       `${baseName}-part-${partNumber}${ext}`,
     );
 
-    console.log(
-      `Splitting part ${partIndex}: ${Math.round(durationSeconds)}s`,
-    );
-    
+    console.log(`Splitting part ${partIndex}: ${Math.round(durationSeconds)}s`);
+
     await cutPart({
       startSeconds,
       durationSeconds,
@@ -552,8 +551,15 @@ async function run() {
 
   for (const inputVideo of inputFiles) {
     console.log(`Processing ${path.basename(inputVideo)}...`);
-    
-    const processedOutput = await videoProcessor(inputVideo, partOutputDir, tempPartDir, introDir, assetsDir, audioDir);
+
+    const processedOutput = await videoProcessor(
+      inputVideo,
+      partOutputDir,
+      tempPartDir,
+      introDir,
+      assetsDir,
+      audioDir,
+    );
     console.log(`Main video processed: ${processedOutput}`);
   }
 }

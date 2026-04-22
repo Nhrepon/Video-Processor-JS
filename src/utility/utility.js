@@ -1,5 +1,11 @@
 const fs = require("fs");
 const path = require("path");
+const ffmpeg = require("fluent-ffmpeg");
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+const ffprobePath = require("@ffprobe-installer/ffprobe").path;
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 
 async function removeFile(filePath) {
   if (!filePath) return false;
@@ -61,8 +67,135 @@ function getAudioFiles(dir) {
     })
     .filter((filePath) => /\.(mp3|wav|m4a|aac|ogg|flac|mp4)$/i.test(filePath));
 }
+
+function getDuration(filePath){
+  return new Promise((resolve, reject) => {
+      ffmpeg.ffprobe(filePath, (error, metadata) => {
+        if (error) {
+          reject(new Error(`ffprobe failed for ${filePath}: ${error.message}`));
+          return;
+        }
+
+        const duration = Number(metadata?.format?.duration);
+        if (!Number.isFinite(duration)) {
+          reject(new Error(`Could not get video duration for ${filePath}`));
+          return;
+        }
+
+        resolve(duration);
+      });
+    })
+};
+
+// async function reverseVideo(videoPath) {
+//   return new Promise((resolve, reject) => {
+//     const outputPath = videoPath.replace(/(\.[^.]+)$/, '_reversed$1');
+
+//     ffmpeg(videoPath)
+//       .outputOptions([
+//         '-vf reverse',
+//         '-af areverse',
+//         '-c:v libx264',
+//         '-preset fast',
+//         '-crf 23',
+//         '-c:a aac',
+//         '-b:a 192k',
+//         '-movflags +faststart',
+//         '-y' // overwrite
+//       ])
+//       .output(outputPath)
+//       .on('end', () => resolve(outputPath))
+//       .on('error', reject)
+//       .run();
+//   });
+// }
+
+// async function mergeVideo(video1, video2, tempPartDir) {
+//   return new Promise((resolve, reject) => {
+//     const outputPath = path.join(tempPartDir, 'merged_video.mp4');
+
+//     const command = ffmpeg()
+//       .input(video1)
+//       .input(video2);
+
+//     command
+//       .complexFilter([
+//         '[0:v][1:v]concat=n=2:v=1:a=0[outv]',
+//         '[0:a?][1:a?]concat=n=2:v=0:a=1[outa]'
+//       ])
+//       .outputOptions([
+//         '-map [outv]',
+//         '-map [outa]?',
+//         '-c:v libx264',
+//         '-preset fast',
+//         '-crf 23',
+//         '-c:a aac',
+//         '-b:a 192k',
+//         '-movflags +faststart',
+//         '-y'
+//       ])
+//       .output(outputPath)
+//       .on('end', () => resolve(outputPath))
+//       .on('error', reject)
+//       .run();
+//   });
+// }
+
+async function reverseVideo(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .outputOptions([
+        '-vf reverse',
+        '-af areverse',
+        '-c:v libx264',
+        '-preset fast',
+        '-crf 23',
+        '-c:a aac',
+        '-b:a 192k',
+        '-movflags +faststart',
+        '-y'
+      ])
+      .output(outputPath + '_reversed.mp4')
+      .on('end', () => resolve(outputPath + '_reversed.mp4'))
+      .on('error', reject)
+      .run();
+  });
+}
+
+async function mergeVideo(video1, video2, outputPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg()
+      .input(video1)
+      .input(video2)
+      .complexFilter([
+        '[0:v][1:v]concat=n=2:v=1:a=0[outv]',
+        '[0:a?][1:a?]concat=n=2:v=0:a=1[outa]'
+      ])
+      .outputOptions([
+        '-map [outv]',
+        '-map [outa]?', // safe if no audio
+        '-c:v libx264',
+        '-preset fast',
+        '-crf 23',
+        '-c:a aac',
+        '-b:a 192k',
+        '-movflags +faststart',
+        '-y'
+      ])
+      .output(outputPath + '_merged.mp4')
+      .on('end', () => resolve(outputPath + '_merged.mp4'))
+      .on('error', reject)
+      .run();
+  });
+}
+
+
+
 module.exports = {
   removeFile,
   getRandomNumber,
   getAudioFiles,
+  reverseVideo,
+  mergeVideo,
+  getDuration,
 };
