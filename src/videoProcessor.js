@@ -54,20 +54,6 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     .replace(/\\/g, "\\\\")
     .replace(/:/g, "\\:");
   const logoPath = assetPath("logo.png");
-  const metadataTitle = `${fileBaseName} | Movie Clip`;
-  const metadataDescription =
-    "Movie clip edit featuring cinematic scenes, short highlights, and engaging moments curated for social video audiences.";
-  const metadataKeywords = [
-    "movie clip",
-    "film scene",
-    "cinematic",
-    "viral clip",
-    "short video",
-    "entertainment",
-    "movie highlights",
-    "scene edit",
-    "nhrepon",
-  ].join(",");
 
   function timemarkToSeconds(timemark) {
     if (!timemark) return null;
@@ -245,7 +231,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     inputs.forEach((inp) => addInput(command, inp));
 
     const fc = [];
-    const gradeFilter = "hue=s=0.28,eq=contrast=1.04:brightness=0.01";
+    // const gradeFilter = "hue=s=0.58,eq=contrast=1.04:brightness=0.01";
+    const gradeFilter =
+      "hue=s=0.58,eq=contrast=1.12:brightness=0.02:saturation=1.15,unsharp=7:7:1.5:5:5:0.8,eq=brightness=0.02:contrast=1.05:gamma=1.05";
 
     // Main: apply blur on half-res background, foreground at full res
     fc.push(`[0:v]setpts=PTS/${SPEED_FACTOR},split=2[mainA][mainB]`);
@@ -253,7 +241,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       `[mainA]scale=${HALF_SIZE}:${HALF_SIZE}:force_original_aspect_ratio=increase,crop=${HALF_SIZE}:${HALF_SIZE},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_SIZE}:${OUTPUT_SIZE},${gradeFilter}[mainbg]`,
     );
     fc.push(
-      `[mainB]hflip,scale=${OUTPUT_SIZE - 80}:${OUTPUT_SIZE - 80}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
+      `[mainB]hflip,scale=${OUTPUT_SIZE}:${OUTPUT_SIZE - 180}:force_original_aspect_ratio=increase,crop=${OUTPUT_SIZE}:${OUTPUT_SIZE - 180}:(iw-ow)/2:(ih-oh)/2,${gradeFilter}[mainfg]`, // `[mainB]hflip,scale=${OUTPUT_SIZE - 180}:${OUTPUT_SIZE - 180}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
     );
     fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
 
@@ -280,7 +268,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "Like, Comment and Share for more videos!",
     );
     fc.push(
-      `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=3:bordercolor=black:x=20:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`, //box=1:boxcolor=black@0.55:boxborderw=18:
+      `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=3:bordercolor=black:x=40:y=25:fix_bounds=true:enable='gte(t,0)'[maintoptext]`, //box=1:boxcolor=black@0.55:boxborderw=18:
     );
     fc.push(
       `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=30:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
@@ -288,7 +276,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     // logo
     if (hasLogo) {
       fc.push(
-        `[${3 + overlayAssets.length}:v]scale=${130}:-1,format=rgba[mainlogo]`,
+        `[${3 + overlayAssets.length}:v]scale=${100}:-1,format=rgba[mainlogo]`,
       );
       fc.push(`[mainv][mainlogo]overlay=W-w-10:10[mainvwithlogo]`);
     }
@@ -304,7 +292,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       `[0:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
     );
 
-    fc.push(`[1:a]anull[introa]`);
+    fc.push(`[1:a]volume=0.3[introa]`);
     fc.push(`[2:a]${atempoFilters(SPEED_FACTOR)}[extraamain]`);
     fc.push(
       `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
@@ -347,9 +335,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-map_metadata",
       "-1",
       "-metadata",
-      `title=${metadataTitle}`,
+      `title=${fileBaseName} | short video`,
       "-metadata",
-      `description=${metadataDescription}`,
+      "description=Short video clip featuring cinematic scenes, cartoon animations, or video game moments curated for social media and short-form content.",
       "-metadata",
       "comment=Produced by NHRepon",
       "-metadata",
@@ -359,7 +347,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-metadata",
       "publisher=NHRepon",
       "-metadata",
-      "genre=Movie Clips",
+      "genre=Short Video Content",
       "-metadata",
       "language=en",
       "-metadata",
@@ -367,15 +355,27 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-metadata",
       "composer=NHRepon",
       "-metadata",
-      "album=Movie Clip Collection",
+      "album=Movie Clip & Animation Collection",
       "-metadata",
       "track=1",
       "-metadata",
       "network=NHRepon",
       "-metadata",
-      "synopsis=Cinematic movie clip created for social sharing and short-form video publishing.",
+      "synopsis=Cinematic movie clip, cartoon animation, or video game scene created for social sharing and short-form video publishing.",
       "-metadata",
-      `keywords=${metadataKeywords}`,
+      `keywords=${[
+        "movie clip",
+        "film scene",
+        "cinematic",
+        "viral clip",
+        "short video",
+        "entertainment",
+        "movie highlights",
+        "animation clip",
+        "cartoon clip",
+        "tom and jerry clip",
+        "nhrepon",
+      ].join(",")}`,
       "-metadata",
       `date=${new Date().toISOString().slice(0, 10)}`,
       "-metadata",
@@ -387,7 +387,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         .complexFilter(filterComplex)
         .outputOptions(...outputOptions)
         .output(outputVideo)
-        .on("start", (cmdline) => console.log("FFmpeg started:", cmdline))
+        .on("start", (cmdline) => console.log("FFmpeg started:", "cmdline"))
         .on("progress", (progress) => {
           const elapsed = timemarkToSeconds(progress.timemark);
           if (elapsed === null || totalDuration <= 0) return;
@@ -565,7 +565,7 @@ async function run() {
       introDir,
       assetsDir,
       audioDir,
-      partMinutes: 4,
+      partMinutes: 2,
     });
 
     console.log(`Finished ${path.basename(inputVideo)}`);
