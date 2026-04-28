@@ -46,6 +46,11 @@ function videoProcessor(
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
+  const brandText = escapeDrawtext("Nhrepon.com");
+  const bottomText = escapeDrawtext("Like, Comment and Share for more videos!");
+  const showTopText = false;
+  const showBottomText = true;
+
   const fileName = path.basename(videoPath);
   const fileExt = path.extname(fileName);
   const fileBaseName = path.basename(fileName, fileExt);
@@ -250,7 +255,7 @@ function videoProcessor(
       inputs.forEach((input) => addInput(command, input));
 
       const fc = [];
-      const gradeFilter = "hue=s=0.28,eq=contrast=1.04:brightness=0.01";
+      const gradeFilter = "hue=s=0.58,eq=contrast=1.04:brightness=0.01";
 
       if (ENABLE_OBJECT_TRACKING) {
         // Object tracking with crop to keep object centered
@@ -292,16 +297,17 @@ function videoProcessor(
         currentMainLabel = outLabel;
       });
 
-      const brandText = escapeDrawtext("Nhrepon.com");
-      const bottomText = escapeDrawtext(
-        "Like, Comment and Share for more videos!",
-      );
-      fc.push(
-        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=90:borderw=3:bordercolor=black:x=20:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
-      );
-      fc.push(
-        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=36:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-20:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
-      );
+      if (showTopText) {
+        fc.push(
+          `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=90:borderw=3:bordercolor=black:x=20:y=40:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
+        );
+      }
+
+      if (showBottomText) {
+        fc.push(
+          `${showTopText ? "[maintoptext]" : currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=100:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-20:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
+        );
+      }
 
       // logo
       fc.push(
@@ -402,7 +408,9 @@ function videoProcessor(
           const rounded = Math.floor(percent);
           if (rounded <= lastLoggedPercent) return;
           lastLoggedPercent = rounded;
-          console.log(`Progress: ${percent.toFixed(1)}%`);
+          console.log(
+            `Progress: ${percent.toFixed(1)}% - elapsed: ${elapsed.toFixed(1)}s / total: ${totalDuration.toFixed(1)}s`,
+          );
         })
         .on("end", async () => {
           try {

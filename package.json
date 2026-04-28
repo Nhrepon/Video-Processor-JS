@@ -11,7 +11,8 @@
     "reelsfb": "node src/reelsFB.js",
     "reelsyt": "node src/reelsYT.js",
     "shorts": "node src/shorts.js",
-    "nhrepon": "node src/nhrepon.js"
+    "nhrepon": "node src/nhrepon.js",
+    "yt": "node src/yt.js"
   },
   "keywords": [],
   "author": "",
