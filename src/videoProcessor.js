@@ -17,15 +17,19 @@ const ffprobePath = require("@ffprobe-installer/ffprobe").path;
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const {
-  getRandomNumber,
-  getAudioFiles,
-  removeFile,
-} = require("./utility/utility");
+const { getRandomNumber, getAudioFiles } = require("./utility/utility");
+const { splitVideo } = require("./utility/splitVideo");
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
-function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
+function videoProcessor(
+  videoPath,
+  outputDir,
+  introDir,
+  assetsDir,
+  audioDir,
+  tempPartDir,
+) {
   ffmpeg.setFfmpegPath(ffmpegPath);
   ffmpeg.setFfprobePath(ffprobePath);
 
@@ -40,12 +44,14 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const OVERLAY_MIN_GAP = 9;
   const OVERLAY_MAX_GAP = 22;
   const BLUR_STRENGTH = 5;
-  const VOICE_PITCH = 0.84;
+  const VOICE_PITCH = 0.88;
   const ORIGINAL_AUDIO_VOLUME = 0.95;
-  const BED_AUDIO_VOLUME = 0.15;
+  const BED_AUDIO_VOLUME = 0.09;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
-
+  // Trim settings - remove seconds from start and end
+  const TRIM_START_SECONDS = 25; // Remove 5 seconds from start
+  const TRIM_END_SECONDS = 43; // Remove 3 seconds from end
   const showTopText = false;
   const showBottomText = true;
   const showIntro = false;
@@ -165,6 +171,15 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       command
         .input(asset.path)
         .inputOptions(["-loop", "1", "-t", String(OVERLAY_DURATION + 2)]);
+    } else if (asset.trimStart !== undefined || asset.trimEnd !== undefined) {
+      // Apply trimming for main video
+      command.input(asset.path);
+      if (asset.trimStart && asset.trimStart > 0) {
+        command.inputOptions([`-ss`, String(asset.trimStart)]);
+      }
+      if (asset.trimEnd && asset.trimEnd > 0 && asset.trimmedDuration) {
+        command.inputOptions([`-t`, String(asset.trimmedDuration)]);
+      }
     } else {
       command.input(asset.path);
     }
@@ -184,15 +199,15 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       audioFiles.length > 0
         ? audioFiles[getRandomNumber(0, audioFiles.length - 1)]
         : audioFiles[0];
-    const randomId = Math.floor(Math.random() * 99999) + 1;
+    const randomId = Math.floor(Math.random() * 999) + 1;
     const outputFileName =
-      `${fileBaseName}-${randomId}-by-nhrepon`
+      `${fileBaseName}`
         .trim()
         .replace(/\s+/g, "-")
-        .replace(/[^a-zA-Z0-9-]/g, "")
+        .replace(/[^a-zA-Z0-9-]/g, "-")
         .replace(/-+/g, "-")
-        .toLowerCase() + `.mp4`;
-    const outputVideo = path.join(outputDir, outputFileName);
+        .toLowerCase() + `-${randomId}-by-nhrepon.mp4`;
+    const outputVideo = path.join(tempPartDir, outputFileName);
 
     if (!fs.existsSync(inputVideo))
       throw new Error(`input.mp4 not found at ${inputVideo}`);
@@ -212,16 +227,30 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       showIntro && getMediaDuration(introVideo),
     ]);
 
-    const mainDuration = mainOrigDur / SPEED_FACTOR;
+    // Apply trimming to main video duration
+    const trimmedMainDur = mainOrigDur - TRIM_START_SECONDS - TRIM_END_SECONDS;
+    const mainDuration = trimmedMainDur / SPEED_FACTOR;
     const introDuration = showIntro ? introOrigDur : 0;
     const totalDuration = mainDuration + introDuration;
     const overlays = buildOverlayPlan(mainDuration, overlayAssets.length);
 
+    console.log(`Original video duration: ${mainOrigDur.toFixed(2)}s`);
+    console.log(
+      `Trimming: -${TRIM_START_SECONDS}s from start, -${TRIM_END_SECONDS}s from end`,
+    );
+    console.log(`Trimmed duration: ${trimmedMainDur.toFixed(2)}s`);
     console.log(`Using ${overlayAssets.length} overlay asset(s)`);
     console.log(`Inserting ${overlays.length} random overlay segment(s)`);
 
     const inputs = [
-      { path: inputVideo, type: "video", label: "main" },
+      {
+        path: inputVideo,
+        type: "video",
+        label: "main",
+        trimStart: TRIM_START_SECONDS,
+        trimEnd: TRIM_END_SECONDS,
+        trimmedDuration: trimmedMainDur,
+      },
       { path: extraAudio, type: "audio", label: "audio" },
       ...overlayAssets.map((a) => ({ ...a })),
     ];
@@ -287,7 +316,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
     if (showBottomText) {
       fc.push(
-        `${showTopText ? "[maintoptext]" : currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
+        `${showTopText ? "[maintoptext]" : currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=60:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
       );
     }
     // logo
@@ -421,7 +450,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
           if (rounded <= lastLoggedPercent) return;
           lastLoggedPercent = rounded;
           console.log(
-            `Progress: ${percent.toFixed(1)}% ✅ - ${elapsed.toFixed(1)}s / ${totalDuration.toFixed(1)}s`,
+            `Progress: ${percent.toFixed(1)}% ✅ ${elapsed.toFixed(1)}s done of ${totalDuration.toFixed(1)}s`,
           );
         })
         .on("end", async () => {
@@ -431,6 +460,13 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
             console.log("\n🎉 Done!");
             console.log(`✅ Output: ${outputVideo}`);
             console.log(`✅ SHA256: ${hash}`);
+            // Split the processed video into parts
+            const results = await splitVideo({
+              inputVideo: outputVideo,
+              outputDir: outputDir,
+              partMinutes: 3,
+            });
+            console.log(`Split into ${results.length} parts`);
             resolve(outputVideo);
           } catch (err) {
             reject(err);
@@ -446,124 +482,6 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   }
 
   return processVideo();
-}
-
-async function splitVideo({
-  inputVideo,
-  tempPartsDir,
-  processedOutputDir,
-  introDir,
-  assetsDir,
-  audioDir,
-  partMinutes = 5,
-}) {
-  const partSeconds = partMinutes * 60;
-  const MIN_PART_DURATION_SECONDS = 30;
-
-  const getDuration = (filePath) =>
-    new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(filePath, (error, metadata) => {
-        if (error) {
-          reject(new Error(`ffprobe failed for ${filePath}: ${error.message}`));
-          return;
-        }
-
-        const duration = Number(metadata?.format?.duration);
-        if (!Number.isFinite(duration)) {
-          reject(new Error(`Could not get video duration for ${filePath}`));
-          return;
-        }
-
-        resolve(duration);
-      });
-    });
-
-  const cutPart = ({ startSeconds, durationSeconds, outputPath }) =>
-    new Promise((resolve, reject) => {
-      ffmpeg(inputVideo)
-        .setStartTime(startSeconds)
-        .duration(durationSeconds)
-        .outputOptions([
-          "-c:v",
-          "libx264",
-          "-preset",
-          "fast",
-          "-crf",
-          "23",
-          "-c:a",
-          "aac",
-          "-b:a",
-          "192k",
-          "-movflags",
-          "+faststart",
-        ])
-        .output(outputPath)
-        .on("end", resolve)
-        .on("error", reject)
-        .run();
-    });
-
-  if (!inputVideo || !fs.existsSync(inputVideo)) {
-    throw new Error(`Input video not found: ${inputVideo}`);
-  }
-
-  fs.mkdirSync(tempPartsDir, { recursive: true });
-  fs.mkdirSync(processedOutputDir, { recursive: true });
-
-  const totalDuration = await getDuration(inputVideo);
-  const totalParts = Math.ceil(totalDuration / partSeconds);
-  const ext = ".mp4"; //path.extname(inputVideo) ||
-  const baseName = path.basename(inputVideo, ext);
-  const processedFiles = [];
-
-  for (let index = 0; index < totalParts; index += 1) {
-    const startSeconds = index * partSeconds;
-    const durationSeconds = Math.min(partSeconds, totalDuration - startSeconds);
-    const partNumber = String(index + 1).padStart(2, "0");
-    const splitPartPath = path.join(
-      tempPartsDir,
-      `${baseName}-part-${partNumber}${ext}`,
-    );
-
-    console.log(
-      `Splitting part ${index + 1}/${totalParts}: ${Math.round(durationSeconds)}s`,
-    );
-    if (durationSeconds < MIN_PART_DURATION_SECONDS) {
-      console.log(
-        `Skipping part ${index + 1}/${totalParts}: duration ${durationSeconds.toFixed(2)}s is under ${MIN_PART_DURATION_SECONDS}s`,
-      );
-      continue;
-    }
-
-    await cutPart({
-      startSeconds,
-      durationSeconds,
-      outputPath: splitPartPath,
-    });
-
-    console.log(`Processing split part: ${splitPartPath}`);
-
-    const processedOutput = await videoProcessor(
-      splitPartPath,
-      processedOutputDir,
-      introDir,
-      assetsDir,
-      audioDir,
-    );
-
-    processedFiles.push({
-      splitPartPath,
-      processedOutput,
-    });
-    const removed = await removeFile(splitPartPath);
-    console.log(
-      removed
-        ? `Removed temp part: ${splitPartPath}`
-        : `Temp part already missing: ${splitPartPath}`,
-    );
-  }
-
-  return processedFiles;
 }
 
 const inputDir = path.join(__dirname, "input");
@@ -584,18 +502,16 @@ async function run() {
   //   await videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir);
   // }
   for (const inputVideo of inputFiles) {
-    const results = await splitVideo({
+    const results = await videoProcessor(
       inputVideo,
-      tempPartsDir: partDir,
-      processedOutputDir: outputDir,
+      outputDir,
       introDir,
       assetsDir,
       audioDir,
-      partMinutes: 3,
-    });
+      partDir,
+    );
 
-    console.log(`Finished ${path.basename(inputVideo)}`);
-    // console.log(results);
+    console.log(`Finished ${inputVideo}`);
     console.log(`Total ${results.length} video processed...`);
   }
 }

@@ -25,24 +25,23 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   ffmpeg.setFfmpegPath(ffmpegPath);
   ffmpeg.setFfprobePath(ffprobePath);
 
-  // YouTube-optimized parameters
-  const SPEED_FACTOR = 1.001; // 0.1% speed change (undetectable but breaks fingerprint)
+  // Stable parameters that work for YouTube
+  const SPEED_FACTOR = 1.001; // 0.1% speed change
   const OUTPUT_SIZE = 1080;
   const HALF_SIZE = Math.floor(OUTPUT_SIZE / 2);
   const OUTPUT_FPS = 30;
   const X264_PRESET = "fast";
-  const CRF = "23"; // Cleaner signal for better quality
+  const CRF = "23";
   const OVERLAY_OPACITY = 0.08;
   const OVERLAY_DURATION = 2.0;
   const OVERLAY_MIN_GAP = 7;
   const OVERLAY_MAX_GAP = 18;
   const BLUR_STRENGTH = 3;
 
-  // YouTube-specific evasion parameters
-  const YT_AUDIO_PITCH = 0.995; // Subtle pitch shift (inaudible but effective)
-  const ORIGINAL_AUDIO_VOLUME = 0.92;
-  const BED_AUDIO_VOLUME = 0.18;
-  const VOICE_PITCH = 0.998; // Very subtle voice pitch
+  // Safe audio parameters
+  const YT_AUDIO_PITCH = 0.998; // Subtle pitch shift (98% of original)
+  const ORIGINAL_AUDIO_VOLUME = 0.95;
+  const BED_AUDIO_VOLUME = 0.15;
 
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
@@ -170,28 +169,6 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     }
   }
 
-  async function scrubMetadata(inputPath, outputPath) {
-    return new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
-        .outputOptions([
-          "-map_metadata",
-          "-1",
-          "-map_chapters",
-          "-1",
-          "-fflags",
-          "+bitexact",
-          "-flags:v",
-          "+bitexact",
-          "-flags:a",
-          "+bitexact",
-        ])
-        .output(outputPath)
-        .on("end", resolve)
-        .on("error", reject)
-        .run();
-    });
-  }
-
   async function processVideo() {
     fs.mkdirSync(assetsDir, { recursive: true });
     fs.mkdirSync(outputDir, { recursive: true });
@@ -212,7 +189,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     const randomId = Math.floor(Math.random() * 99999) + 1;
     const uniqueSeed = crypto.randomBytes(4).toString("hex");
     const outputFileName =
-      `${fileBaseName}-${randomId}-yt-${uniqueSeed}`
+      `${fileBaseName}-${randomId}-${uniqueSeed}`
         .trim()
         .replace(/\s+/g, "-")
         .replace(/[^a-zA-Z0-9-]/g, "")
@@ -246,6 +223,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     console.log(`Using ${overlayAssets.length} overlay asset(s)`);
     console.log(`Inserting ${overlays.length} random overlay segment(s)`);
     console.log(`Unique render ID: ${uniqueSeed}`);
+    console.log(`Video duration: ${Math.round(mainDuration)} seconds`);
 
     const inputs = [
       { path: inputVideo, type: "video", label: "main" },
@@ -267,12 +245,12 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     const fc = [];
 
     // Generate random frame offset for temporal jitter
-    const frameTimeOffset = Math.random() * 0.04 - 0.02; // -20ms to +20ms
+    const frameTimeOffset = Math.random() * 0.02 - 0.01; // -10ms to +10ms
 
-    // YouTube-optimized grade filter
-    const gradeFilter = `hue=s=0.62:H=5*PI/180,eq=contrast=1.08:brightness=0.015:saturation=1.08,unsharp=5:5:1.2:5:5:0.6`;
+    // Stable grade filter (removed problematic filters)
+    const gradeFilter = `eq=contrast=1.05:brightness=0.01:saturation=1.05`;
 
-    // Main video processing with temporal jitter
+    // Main video processing
     fc.push(
       `[0:v]setpts=PTS/${SPEED_FACTOR}+${frameTimeOffset}/TB,split=2[mainA][mainB]`,
     );
@@ -286,19 +264,18 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
     let currentMainLabel = "[mainbase]";
 
-    // Add overlays with individual temporal offsets
+    // Add overlays
     overlays.forEach((ov, idx) => {
       const overallInputIndex = 2 + ov.assetIndex + (showIntro ? 1 : 0);
       const overlayLabel = `[ov${idx}]`;
-      const overlayTimeOffset = Math.random() * 0.03 - 0.015;
 
       fc.push(
-        `[${overallInputIndex}:v]setpts=PTS+${overlayTimeOffset}/TB,scale=${OUTPUT_SIZE}:${OUTPUT_SIZE}:force_original_aspect_ratio=increase,crop=${OUTPUT_SIZE}:${OUTPUT_SIZE},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY}${overlayLabel}`,
+        `[${overallInputIndex}:v]scale=${OUTPUT_SIZE}:${OUTPUT_SIZE}:force_original_aspect_ratio=increase,crop=${OUTPUT_SIZE}:${OUTPUT_SIZE},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY}${overlayLabel}`,
       );
 
       const outLabel = `[mlayer${idx}]`;
       fc.push(
-        `${currentMainLabel}${overlayLabel}overlay=0:0:enable='between(t,${ov.start},${ov.end})':shortest=1,format=yuv420p${outLabel}`,
+        `${currentMainLabel}${overlayLabel}overlay=0:0:enable='between(t,${ov.start},${ov.end})'${outLabel}`,
       );
       currentMainLabel = outLabel;
     });
@@ -316,7 +293,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
     if (showBottomText) {
       fc.push(
-        `${showTopText ? "[maintoptext]" : currentMainLabel}drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true,setsar=1[mainv]`,
+        `${showTopText ? "[maintoptext]" : currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true,setsar=1[mainv]`,
       );
     }
 
@@ -334,62 +311,50 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       );
     }
 
-    // ============ AUDIO FINGERPRINT BREAKER FOR YOUTUBE ============
-    // This combination destroys YouTube's acoustic fingerprint while remaining inaudible
+    // ============ STABLE AUDIO PROCESSING FOR YOUTUBE ============
+    // Removed problematic filters (aphaser, chorus, aeval)
+    // Using only safe filters that maintain sync
 
-    // Process main audio with phase scrambling
-    const audioFilters = [];
-    audioFilters.push(`asetrate=44100*${YT_AUDIO_PITCH}`); // Subtle pitch shift
-    audioFilters.push(`aresample=44100`);
-    audioFilters.push(`aphaser=type=t:decay=0.7`); // Phase scrambling (critical)
-    audioFilters.push(`chorus=0.5:0.9:50|60:0.4|0.32:0.25|0.4:2|2.3`); // Natural spread
-    audioFilters.push(`aeval=val(0)|val(1),aformat=sample_fmts=fltp`); // Phase shift
-    audioFilters.push(`volume=${ORIGINAL_AUDIO_VOLUME}`);
+    // Process main audio with safe pitch shift only
+    fc.push(
+      `[0:a]asetrate=44100*${YT_AUDIO_PITCH},aresample=44100,atempo=${(1 / YT_AUDIO_PITCH).toFixed(6)}[mainorig]`,
+    );
 
-    fc.push(`[0:a]${audioFilters.join(",")}[mainorig]`);
-
-    // Process voice audio if present
+    // Process bed audio
     if (showIntro) {
       fc.push(`[1:a]volume=0.25[introa]`);
-      fc.push(
-        `[2:a]asetrate=44100*0.998,aresample=44100,aphaser=type=t:decay=0.5[extraamain]`,
-      );
+      fc.push(`[2:a]atempo=${SPEED_FACTOR}[extraamain]`);
     } else {
-      fc.push(
-        `[1:a]asetrate=44100*0.998,aresample=44100,aphaser=type=t:decay=0.5[extraamain]`,
-      );
+      fc.push(`[1:a]atempo=${SPEED_FACTOR}[extraamain]`);
     }
 
     fc.push(
       `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
     );
     fc.push(
-      `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2.5[maina]`,
+      `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`,
     );
 
-    // Add subtle white noise (0.3% - breaks fingerprint without audible distortion)
-    const noiseAmplitude = 0.003;
-    fc.push(
-      `anoisesrc=d=${mainDuration.toFixed(3)}:c=white:r=44100:a=${noiseAmplitude}[noise]`,
-    );
-    fc.push(`[maina][noise]amix=inputs=2:duration=first[mainafinal]`);
-
-    // Apply dynamic compression to mask artifacts
-    fc.push(
-      `[mainafinal]acompressor=threshold=0.1:ratio=2:attack=5:release=50,volume=0.95[finalaudio]`,
-    );
+    // Apply subtle volume normalization
+    fc.push(`[maina]volume=${ORIGINAL_AUDIO_VOLUME}[finalaudio]`);
 
     // Concat video and audio
     const videoLabel = hasLogo ? "[mainvwithlogo]" : "[mainv]";
-    fc.push(
-      `${videoLabel}[finalaudio]${showIntro ? "[introv][introa]" : ""}concat=n=${showIntro ? 2 : 1}:v=1:a=1[outv][outa]`,
-    );
+    const audioLabel = "[finalaudio]";
+
+    if (showIntro) {
+      fc.push(
+        `${videoLabel}${audioLabel}[introv][introa]concat=n=2:v=1:a=1[outv][outa]`,
+      );
+    } else {
+      fc.push(`${videoLabel}${audioLabel}concat=n=1:v=1:a=1[outv][outa]`);
+    }
 
     const filterComplex = fc.join(";");
 
     let lastLoggedPercent = -1;
 
-    // YouTube-optimized output options
+    // Clean output options for YouTube
     const outputOptions = [
       "-map",
       "[outv]",
@@ -406,7 +371,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-c:a",
       "aac",
       "-b:a",
-      "128k", // YouTube optimal bitrate
+      "128k",
+      "-ar",
+      "44100", // Force sample rate
       "-r",
       String(OUTPUT_FPS),
       "-pix_fmt",
@@ -414,33 +381,13 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-movflags",
       "+faststart",
       "-map_metadata",
-      "-1", // Remove all metadata
-      "-map_chapters",
       "-1",
-      "-fflags",
-      "+bitexact",
-      "-flags:v",
-      "+bitexact",
-      "-flags:a",
-      "+bitexact",
       "-metadata",
-      `title=${fileBaseName.substring(0, 50)} | Short Video`,
-      "-metadata",
-      "description=Cinematic video content for entertainment",
+      `title=${fileBaseName.substring(0, 50)}`,
       "-metadata",
       "artist=Content Creator",
       "-metadata",
       `date=${new Date().toISOString().slice(0, 10)}`,
-      "-metadata",
-      "copyright=",
-      "-metadata",
-      "encoder=",
-      "-metadata",
-      "encoded_by=",
-      "-metadata",
-      "composer=",
-      "-metadata",
-      `comment=Rendered with ID:${uniqueSeed}`,
     ];
 
     return new Promise((resolve, reject) => {
@@ -449,7 +396,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         .outputOptions(...outputOptions)
         .output(outputVideo)
         .on("start", (cmdline) => {
-          console.log("FFmpeg started (YouTube-optimized mode)");
+          console.log("FFmpeg started");
           if (process.env.DEBUG_FFMPEG) console.log(cmdline);
         })
         .on("progress", (progress) => {
@@ -466,21 +413,35 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         })
         .on("end", async () => {
           try {
+            // Verify the output file plays correctly
+            const outputDuration = await getMediaDuration(outputVideo).catch(
+              () => null,
+            );
+            if (
+              outputDuration &&
+              Math.abs(outputDuration - totalDuration) > 2
+            ) {
+              console.warn(
+                `⚠️ Warning: Output duration (${outputDuration}s) differs from expected (${totalDuration}s)`,
+              );
+            }
+
             const hash = await fileSha256Hex(outputVideo);
             console.log("✅ Progress: 100.0%");
             console.log("\n🎉 Video processing complete!");
             console.log(`📁 Output: ${outputVideo}`);
-            console.log(`🔑 SHA256: ${hash}`);
-            console.log(`🆔 Render ID: ${uniqueSeed}`);
-            console.log("\n📋 Ready for manual YouTube upload");
+            console.log(
+              `📊 Duration: ${outputDuration ? outputDuration.toFixed(1) : "unknown"} seconds`,
+            );
+            console.log(`🔑 SHA256: ${hash.substring(0, 16)}...`);
             resolve(outputVideo);
           } catch (err) {
             reject(err);
           }
         })
         .on("error", (err, stdout, stderr) => {
-          console.error("Error:", err && err.message ? err.message : err);
-          if (stderr) console.error(stderr);
+          console.error("FFmpeg error:", err.message);
+          if (stderr) console.error(stderr.substring(0, 500));
           reject(err);
         })
         .run();
@@ -634,19 +595,21 @@ async function run() {
     console.log(`\n📹 Processing: ${path.basename(inputVideo)}`);
 
     // Option 1: Process without splitting (use for videos under 10 minutes)
-    await videoProcessor(inputVideo, outputDir, introDir, assetsDir, audioDir);
+    // await videoProcessor(inputVideo, outputDir, introDir, assetsDir, audioDir);
 
     // Option 2: Process with splitting (uncomment for long videos)
-    // const results = await splitVideo({
-    //   inputVideo,
-    //   tempPartsDir: partDir,
-    //   processedOutputDir: outputDir,
-    //   introDir,
-    //   assetsDir,
-    //   audioDir,
-    //   partMinutes: 3, // Split into 3-minute chunks
-    // });
-    // console.log(`✅ Processed ${results.length} parts from ${path.basename(inputVideo)}`);
+    const results = await splitVideo({
+      inputVideo,
+      tempPartsDir: partDir,
+      processedOutputDir: outputDir,
+      introDir,
+      assetsDir,
+      audioDir,
+      partMinutes: 3, // Split into 3-minute chunks
+    });
+    console.log(
+      `✅ Processed ${results.length} parts from ${path.basename(inputVideo)}`,
+    );
   }
 
   console.log("\n✨ All videos processed successfully!");

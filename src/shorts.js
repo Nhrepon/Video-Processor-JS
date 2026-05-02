@@ -41,8 +41,8 @@ function videoProcessor(
   const OVERLAY_MAX_GAP = 22;
   const BLUR_STRENGTH = 8;
   const VOICE_PITCH = 0.88;
-  const ORIGINAL_AUDIO_VOLUME = 0.9;
-  const BED_AUDIO_VOLUME = 0.18;
+  const ORIGINAL_AUDIO_VOLUME = 0.97;
+  const BED_AUDIO_VOLUME = 0.09;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
@@ -305,7 +305,7 @@ function videoProcessor(
 
       if (showBottomText) {
         fc.push(
-          `${showTopText ? "[maintoptext]" : currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=100:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-20:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
+          `${showTopText ? "[maintoptext]" : currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-20:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
         );
       }
 
@@ -510,7 +510,7 @@ async function splitVideo({ inputVideo, tempPartsDir, processedOutputDir }) {
 
   while (startSeconds < totalDuration) {
     partIndex++;
-    let partSeconds = getRandomNumber(10, 49);
+    let partSeconds = getRandomNumber(10, 19);
     const durationSeconds = Math.min(partSeconds, totalDuration - startSeconds);
 
     console.log(
