@@ -39,22 +39,23 @@ function videoProcessor(
   const OUTPUT_FPS = 30;
   const X264_PRESET = "fast";
   const CRF = "24";
-  const OVERLAY_OPACITY = 0.04;
+  const OVERLAY_OPACITY = 0.06;
   const OVERLAY_DURATION = 1.5;
-  const OVERLAY_MIN_GAP = 9;
-  const OVERLAY_MAX_GAP = 22;
+  const OVERLAY_MIN_GAP = 8;
+  const OVERLAY_MAX_GAP = 20;
   const BLUR_STRENGTH = 5;
-  const VOICE_PITCH = 0.88;
+  const VOICE_PITCH = 0.84;
   const ORIGINAL_AUDIO_VOLUME = 0.95;
-  const BED_AUDIO_VOLUME = 0.09;
+  const BED_AUDIO_VOLUME = 0.2;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
   // Trim settings - remove seconds from start and end
-  const TRIM_START_SECONDS = 25; // Remove 5 seconds from start
-  const TRIM_END_SECONDS = 43; // Remove 3 seconds from end
+  const TRIM_START_SECONDS = 1; // Remove 10 seconds from start
+  const TRIM_END_SECONDS = 1; // Remove 20 seconds from end
   const showTopText = false;
   const showBottomText = true;
   const showIntro = false;
+  const hueShift = 0.48;
 
   let fileName = path.basename(videoPath); // adjust if you run from repo root
   const fileExt = path.extname(fileName);
@@ -104,7 +105,12 @@ function videoProcessor(
     const imageAssets = files
       .filter((f) => /^own-image\./i.test(f))
       .filter((f) => IMAGE_EXTENSIONS.has(path.extname(f).toLowerCase()))
-      .map((f) => ({ path: assetPath(f), type: "image", name: f }));
+      .map((f) => ({
+        path: assetPath(f),
+        type: "image",
+        name: f,
+        label: `overlay_${f}`,
+      }));
 
     return imageAssets;
   }
@@ -113,8 +119,9 @@ function videoProcessor(
     const overlays = [];
     let current = 5;
     const dur = Math.max(0, Number(mainDuration) || 0);
+    const MAX_OVERLAYS = 100; // Increased overlay count
 
-    while (true) {
+    while (overlays.length < MAX_OVERLAYS) {
       const gap =
         OVERLAY_MIN_GAP + Math.random() * (OVERLAY_MAX_GAP - OVERLAY_MIN_GAP);
       current += gap;
@@ -273,8 +280,7 @@ function videoProcessor(
 
     const fc = [];
     // const gradeFilter = "hue=s=0.58,eq=contrast=1.04:brightness=0.01";
-    const gradeFilter =
-      "hue=s=0.58,eq=contrast=1.12:brightness=0.02:saturation=1.15,unsharp=7:7:1.5:5:5:0.8,eq=brightness=0.02:contrast=1.05:gamma=1.05";
+    const gradeFilter = `hue=s=${hueShift},eq=contrast=1.12:brightness=0.02:saturation=1.15,unsharp=7:7:1.5:5:5:0.8,eq=brightness=0.02:contrast=1.05:gamma=1.05`;
 
     // Main: apply blur on half-res background, foreground at full res
     fc.push(`[0:v]setpts=PTS/${SPEED_FACTOR},split=2[mainA][mainB]`);
@@ -348,15 +354,21 @@ function videoProcessor(
       fc.push(`[1:a]${atempoFilters(SPEED_FACTOR)}[extraamain]`);
     }
     fc.push(
-      `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
+      `[extraamain]atrim=duration=${trimmedMainDur.toFixed(3)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
     );
     fc.push(
       `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`,
     );
 
+    // Ensure final video matches trimmed duration
+    fc.push(
+      `[${hasLogo ? "mainvwithlogo" : "mainv"}]trim=duration=${trimmedMainDur.toFixed(3)}[finalv]`,
+    );
+    fc.push(`[maina]atrim=duration=${trimmedMainDur.toFixed(3)}[finala]`);
+
     // concat
     fc.push(
-      `[${hasLogo ? "mainvwithlogo" : "mainv"}][maina]${showIntro ? "[introv][introa]" : ""}concat=n=${showIntro ? 2 : 1}:v=1:a=1[outv][outa]`,
+      `[finalv][finala]${showIntro ? "[introv][introa]" : ""}concat=n=${showIntro ? 2 : 1}:v=1:a=1[outv][outa]`,
     );
 
     const filterComplex = fc.join(";");
@@ -464,7 +476,7 @@ function videoProcessor(
             const results = await splitVideo({
               inputVideo: outputVideo,
               outputDir: outputDir,
-              partMinutes: 3,
+              partMinutes: 2,
             });
             console.log(`Split into ${results.length} parts`);
             resolve(outputVideo);

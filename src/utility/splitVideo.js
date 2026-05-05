@@ -68,7 +68,9 @@ async function splitVideo({ inputVideo, outputDir, partMinutes = 5 }) {
       outputPath: splitPartPath,
     });
 
-    console.log(`Processing: ${Math.round((partIndex / 4) * 100)}%`);
+    console.log(
+      `Processing: ${partIndex} our of ${Math.ceil(totalDuration / seconds)}`,
+    );
 
     processedFiles.push({
       splitPartPath,
