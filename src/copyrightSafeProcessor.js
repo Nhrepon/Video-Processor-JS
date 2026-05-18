@@ -13,11 +13,18 @@ const {
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
-function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
+function copyrightSafeVideoProcessor(
+  videoPath,
+  outputDir,
+  introDir,
+  assetsDir,
+  audioDir,
+) {
   ffmpeg.setFfmpegPath(ffmpegPath);
   ffmpeg.setFfprobePath(ffprobePath);
 
-  const SPEED_FACTOR = 1.05;
+  // Enhanced parameters for copyright avoidance
+  const SPEED_FACTOR = 1.08; // Slightly faster to alter timing
   const OUTPUT_WIDTH = 1080;
   const OUTPUT_HEIGHT = 1350;
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
@@ -25,14 +32,14 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const OUTPUT_FPS = 30;
   const X264_PRESET = "fast";
   const CRF = "24";
-  const OVERLAY_OPACITY = 0.05;
-  const OVERLAY_DURATION = 0.8;
-  const OVERLAY_MIN_GAP = 9;
-  const OVERLAY_MAX_GAP = 20;
-  const BLUR_STRENGTH = 2;
-  const VOICE_PITCH = 0.94;
-  const ORIGINAL_AUDIO_VOLUME = 0.9;
-  const BED_AUDIO_VOLUME = 0.2;
+  const OVERLAY_OPACITY = 0.08; // Increased overlay opacity
+  const OVERLAY_DURATION = 1.2; // Longer overlay duration
+  const OVERLAY_MIN_GAP = 7;
+  const OVERLAY_MAX_GAP = 15;
+  const BLUR_STRENGTH = 3; // Increased blur
+  const VOICE_PITCH = 0.82; // More significant pitch change
+  const ORIGINAL_AUDIO_VOLUME = 0.7; // Lower original audio
+  const BED_AUDIO_VOLUME = 0.25; // Higher bed audio
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
@@ -92,7 +99,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
   function buildOverlayPlan(mainDuration, assetCount) {
     const overlays = [];
-    let current = 5;
+    let current = 3; // Start earlier
     const duration = Math.max(0, Number(mainDuration) || 0);
 
     while (true) {
@@ -100,7 +107,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         OVERLAY_MIN_GAP + Math.random() * (OVERLAY_MAX_GAP - OVERLAY_MIN_GAP);
       current += gap;
 
-      if (current + OVERLAY_DURATION > duration - 3) break;
+      if (current + OVERLAY_DURATION > duration - 2) break;
 
       overlays.push({
         start: Number(current.toFixed(3)),
@@ -176,16 +183,16 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       const extraAudio =
         audioFiles.length > 0
           ? audioFiles[getRandomNumber(0, audioFiles.length - 1)]
-          : null;
+          : audioFiles[0];
 
       const randomId = Math.floor(Math.random() * 99999) + 1;
       const outputFileName =
-        `${fileBaseName}-${randomId}-by-nhrepon`
+        `${fileBaseName}-${randomId}-copyright-safe`
           .trim()
           .replace(/\s+/g, "-")
           .replace(/[^a-zA-Z0-9-]/g, "")
           .replace(/-+/g, "-")
-          .toLowerCase() + `.mp4`; //replace(/\s+/g, "-");
+          .toLowerCase() + `.mp4`;
       const outputVideo = path.join(outputDir, outputFileName);
 
       if (!fs.existsSync(inputVideo)) {
@@ -212,7 +219,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       const totalDuration = mainDuration;
       const overlays = buildOverlayPlan(mainDuration, overlayAssets.length);
 
-      console.log(`Using ${overlayAssets.length} overlay asset(s)`);
+      console.log(
+        `Using ${overlayAssets.length} overlay asset(s) for copyright avoidance`,
+      );
       console.log(`Inserting ${overlays.length} random overlay segment(s)`);
 
       const inputs = [
@@ -227,14 +236,20 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       inputs.forEach((input) => addInput(command, input));
 
       const fc = [];
-      const gradeFilter = "hue=s=0.28,eq=contrast=1.04:brightness=0.01";
 
+      // Enhanced visual effects for copyright avoidance
+      const gradeFilter =
+        "hue=s=0.22: h=0.15,eq=contrast=1.08:brightness=0.02:saturation=0.85,curves=all='0/0 0.5/0.58 1/1'";
+      const noiseFilter = "noise=alls=8:allf=t+u";
+      const vignetteFilter = "vignette=0.3:0.8";
+
+      // Main video processing with enhanced effects
       fc.push(`[0:v]setpts=PTS/${SPEED_FACTOR},split=2[mainA][mainB]`);
       fc.push(
-        `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[mainbg]`,
+        `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter},${noiseFilter},${vignetteFilter}[mainbg]`,
       );
       fc.push(
-        `[mainB]hflip,scale=${1000}:${1000}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
+        `[mainB]hflip,scale=${1000}:${1000}:force_original_aspect_ratio=increase,${gradeFilter},eq=brightness=0.03:contrast=1.06[mainfg]`,
       );
       fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
 
@@ -245,7 +260,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         const outLabel = `[mlayer${index}]`;
 
         fc.push(
-          `[${overallInputIndex}:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY}${overlayLabel}`,
+          `[${overallInputIndex}:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY},hue=s=0.3${overlayLabel}`,
         );
         fc.push(
           `${currentMainLabel}${overlayLabel}overlay=0:0:enable='between(t,${overlay.start},${overlay.end})'${outLabel}`,
@@ -257,46 +272,50 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       const bottomText = escapeDrawtext(
         "Like, Comment and Share for more videos!",
       );
+
+      // Enhanced text overlays with more effects
       fc.push(
-        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=92:borderw=2:bordercolor=black:x=20:y=20:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
+        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=92:borderw=3:bordercolor=black@0.7:x=20:y=20:fix_bounds=true:enable='gte(t,0)'[maintoptext]`,
       );
       fc.push(
-        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-20:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`, //setsar=1[mainv]
+        `[maintoptext]drawtext=text='${bottomText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=2:bordercolor=black@0.7:x=(w-text_w)/2:y=h-text_h-20:fix_bounds=true:enable='gte(t,0)',setsar=1[maintexted]`,
       );
 
-      // logo
+      // Logo with effects
       fc.push(
-        `[${3 + overlayAssets.length}:v]scale=${150}:-1,format=rgba[mainlogo]`,
+        `[${3 + overlayAssets.length}:v]scale=${150}:-1,format=rgba,hue=s=0.2[mainlogo]`,
       );
       fc.push(`[maintexted][mainlogo]overlay=W-w-${10}:${10}[mainv]`);
-      // Intro processing at half-res blur also
+
+      // Intro processing with enhanced effects
       fc.push(`[1:v]setpts=PTS/${SPEED_FACTOR},split=2[introA][introB]`);
       fc.push(
-        `[introA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[introbg]`,
+        `[introA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter},${noiseFilter}[introbg]`,
       );
       fc.push(
-        `[introB]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,${gradeFilter}[introfg]`,
+        `[introB]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,${gradeFilter},eq=brightness=0.04:contrast=1.05[introfg]`,
       );
       fc.push(`[introbg][introfg]overlay=(W-w)/2:(H-h)/2[introbase]`);
       fc.push(
-        `[introbase]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=90:fix_bounds=true:enable='gte(t,0)'[introtoptext]`,
+        `[introbase]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=3:bordercolor=black@0.7:box=1:boxcolor=black@0.65:boxborderw=20:x=(w-text_w)/2:y=90:fix_bounds=true:enable='gte(t,0)'[introtoptext]`,
       );
       fc.push(
-        `[introtoptext]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=2:bordercolor=black:box=1:boxcolor=black@0.55:boxborderw=18:x=(w-text_w)/2:y=h-text_h-90:fix_bounds=true:enable='gte(t,0)',setsar=1[introv]`,
+        `[introtoptext]drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=72:borderw=3:bordercolor=black@0.7:box=1:boxcolor=black@0.65:boxborderw=20:x=(w-text_w)/2:y=h-text_h-90:fix_bounds=true:enable='gte(t,0)',setsar=1[introv]`,
       );
 
+      // Enhanced audio processing for copyright avoidance
       fc.push(
-        `[0:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
+        `[0:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME},highpass=f=200,lowpass=f=3000,equalizer=f=1000:width_type=h:width=100:g=3[mainorig]`,
       );
       fc.push(
-        `[1:a]${atempoFilters(SPEED_FACTOR)},atrim=duration=${introDuration.toFixed(3)},volume=${ORIGINAL_AUDIO_VOLUME}[introorig]`,
+        `[1:a]${atempoFilters(SPEED_FACTOR)},atrim=duration=${introDuration.toFixed(3)},volume=${ORIGINAL_AUDIO_VOLUME},highpass=f=150,lowpass=f=4000[introorig]`,
       );
       fc.push(`[2:a]${atempoFilters(SPEED_FACTOR)}[extraamain]`);
       fc.push(
-        `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
+        `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=${BED_AUDIO_VOLUME},equalizer=f=500:width_type=h:width=50:g=2[mainbed]`,
       );
       fc.push(
-        `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`,
+        `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2,highpass=f=100,lowpass=f=5000[maina]`,
       );
       fc.push(`[introorig]anull[introa]`);
       fc.push(`[mainv][maina][introv][introa]concat=n=2:v=1:a=1[outv][outa]`);
@@ -334,7 +353,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
           "-metadata",
           `title=Md. Nur Hossain Repon ${outputFileName}`,
           "-metadata",
-          "comment=Produced by NHRepon",
+          "comment=Copyright-safe processing by NHRepon",
           "-metadata",
           "artist=Md. Nur Hossain Repon",
         ])
@@ -354,7 +373,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
           try {
             const hash = await fileSha256Hex(outputVideo);
             console.log("Progress: 100.0%");
-            console.log(`Output: ${outputVideo} (1080x1350 4:5)`);
+            console.log(
+              `Copyright-safe output: ${outputVideo} (1080x1350 4:5)`,
+            );
             console.log(`SHA256: ${hash}`);
             resolve(outputVideo);
           } catch (err) {
@@ -372,14 +393,14 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   });
 }
 
-async function splitVideo({
+async function splitCopyrightSafeVideo({
   inputVideo,
   tempPartsDir,
   processedOutputDir,
   introDir,
   assetsDir,
   audioDir,
-  partMinutes = 5,
+  partMinutes = 4, // Shorter parts for more variation
 }) {
   const partSeconds = partMinutes * 60;
 
@@ -435,7 +456,7 @@ async function splitVideo({
 
   const totalDuration = await getDuration(inputVideo);
   const totalParts = Math.ceil(totalDuration / partSeconds);
-  const ext = ".mp4"; //path.extname(inputVideo) ||
+  const ext = ".mp4";
   const baseName = path.basename(inputVideo, ext);
   const processedFiles = [];
 
@@ -445,11 +466,11 @@ async function splitVideo({
     const partNumber = String(index + 1).padStart(2, "0");
     const splitPartPath = path.join(
       tempPartsDir,
-      `${baseName}-part-${partNumber}${ext}`,
+      `${baseName}-copyright-safe-part-${partNumber}${ext}`,
     );
 
     console.log(
-      `Splitting part ${index + 1}/${totalParts}: ${Math.round(durationSeconds)}s`,
+      `Splitting copyright-safe part ${index + 1}/${totalParts}: ${Math.round(durationSeconds)}s`,
     );
 
     await cutPart({
@@ -458,9 +479,9 @@ async function splitVideo({
       outputPath: splitPartPath,
     });
 
-    console.log(`Processing split part: ${splitPartPath}`);
+    console.log(`Processing copyright-safe split part: ${splitPartPath}`);
 
-    const processedOutput = await videoProcessor(
+    const processedOutput = await copyrightSafeVideoProcessor(
       splitPartPath,
       processedOutputDir,
       introDir,
@@ -488,9 +509,9 @@ const introDir = path.join(__dirname, "intro");
 const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
 const partDir = path.join(__dirname, "output/parts");
-const partOutputDir = path.join(__dirname, "output/partOutput");
+const partOutputDir = path.join(__dirname, "output/copyrightSafeOutput");
 
-async function run() {
+async function runCopyrightSafe() {
   const inputFiles = fs
     .readdirSync(inputDir)
     .filter((file) => /\.(mp4|mov|mkv|webm)$/i.test(file))
@@ -501,23 +522,31 @@ async function run() {
   }
 
   for (const inputVideo of inputFiles) {
-    const results = await splitVideo({
+    const results = await splitCopyrightSafeVideo({
       inputVideo,
       tempPartsDir: partDir,
       processedOutputDir: partOutputDir,
       introDir,
       assetsDir,
       audioDir,
-      partMinutes: 5,
+      partMinutes: 3, // Even shorter parts for maximum variation
     });
 
-    console.log(`Finished ${path.basename(inputVideo)}`);
-    // console.log(results);
-    console.log(`Total ${results.length} video processed...`);
+    console.log(
+      `Finished copyright-safe processing for ${path.basename(inputVideo)}`,
+    );
+    console.log(`Total ${results.length} copyright-safe videos processed...`);
   }
 }
 
-run().catch((error) => {
+module.exports = {
+  copyrightSafeVideoProcessor,
+  splitCopyrightSafeVideo,
+  runCopyrightSafe,
+};
+
+// Uncomment to run directly
+runCopyrightSafe().catch((error) => {
   console.error(error.message || error);
   process.exit(1);
 });

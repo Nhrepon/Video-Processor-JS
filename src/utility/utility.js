@@ -3,6 +3,7 @@ const path = require("path");
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 const ffprobePath = require("@ffprobe-installer/ffprobe").path;
+const crypto = require("crypto");
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
@@ -68,24 +69,42 @@ function getAudioFiles(dir) {
     .filter((filePath) => /\.(mp3|wav|m4a|aac|ogg|flac|mp4)$/i.test(filePath));
 }
 
-function getDuration(filePath){
+function getDuration(filePath) {
   return new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(filePath, (error, metadata) => {
-        if (error) {
-          reject(new Error(`ffprobe failed for ${filePath}: ${error.message}`));
-          return;
-        }
+    ffmpeg.ffprobe(filePath, (error, metadata) => {
+      if (error) {
+        reject(new Error(`ffprobe failed for ${filePath}: ${error.message}`));
+        return;
+      }
 
-        const duration = Number(metadata?.format?.duration);
-        if (!Number.isFinite(duration)) {
-          reject(new Error(`Could not get video duration for ${filePath}`));
-          return;
-        }
+      const duration = Number(metadata?.format?.duration);
+      if (!Number.isFinite(duration)) {
+        reject(new Error(`Could not get video duration for ${filePath}`));
+        return;
+      }
 
-        resolve(duration);
-      });
-    })
-};
+      resolve(duration);
+    });
+  });
+}
+
+async function fileSha256Hex(filePath) {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    const rs = fs.createReadStream(filePath);
+    rs.on("error", reject);
+    hash.on("error", reject);
+    rs.on("end", () => resolve(hash.digest("hex")));
+    rs.pipe(hash, { end: true });
+  });
+}
+
+function timemarkToSeconds(timemark) {
+  if (!timemark) return null;
+  const parts = timemark.split(":").map(Number);
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return null;
+  return parts[0] * 3600 + parts[1] * 60 + parts[2];
+}
 
 // async function reverseVideo(videoPath) {
 //   return new Promise((resolve, reject) => {
@@ -145,19 +164,19 @@ async function reverseVideo(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
       .outputOptions([
-        '-vf reverse',
-        '-af areverse',
-        '-c:v libx264',
-        '-preset fast',
-        '-crf 23',
-        '-c:a aac',
-        '-b:a 192k',
-        '-movflags +faststart',
-        '-y'
+        "-vf reverse",
+        "-af areverse",
+        "-c:v libx264",
+        "-preset fast",
+        "-crf 23",
+        "-c:a aac",
+        "-b:a 192k",
+        "-movflags +faststart",
+        "-y",
       ])
-      .output(outputPath + '_reversed.mp4')
-      .on('end', () => resolve(outputPath + '_reversed.mp4'))
-      .on('error', reject)
+      .output(outputPath + "_reversed.mp4")
+      .on("end", () => resolve(outputPath + "_reversed.mp4"))
+      .on("error", reject)
       .run();
   });
 }
@@ -168,28 +187,26 @@ async function mergeVideo(video1, video2, outputPath) {
       .input(video1)
       .input(video2)
       .complexFilter([
-        '[0:v][1:v]concat=n=2:v=1:a=0[outv]',
-        '[0:a?][1:a?]concat=n=2:v=0:a=1[outa]'
+        "[0:v][1:v]concat=n=2:v=1:a=0[outv]",
+        "[0:a?][1:a?]concat=n=2:v=0:a=1[outa]",
       ])
       .outputOptions([
-        '-map [outv]',
-        '-map [outa]?', // safe if no audio
-        '-c:v libx264',
-        '-preset fast',
-        '-crf 23',
-        '-c:a aac',
-        '-b:a 192k',
-        '-movflags +faststart',
-        '-y'
+        "-map [outv]",
+        "-map [outa]?", // safe if no audio
+        "-c:v libx264",
+        "-preset fast",
+        "-crf 23",
+        "-c:a aac",
+        "-b:a 192k",
+        "-movflags +faststart",
+        "-y",
       ])
-      .output(outputPath + '_merged.mp4')
-      .on('end', () => resolve(outputPath + '_merged.mp4'))
-      .on('error', reject)
+      .output(outputPath + "_merged.mp4")
+      .on("end", () => resolve(outputPath + "_merged.mp4"))
+      .on("error", reject)
       .run();
   });
 }
-
-
 
 module.exports = {
   removeFile,
@@ -198,4 +215,6 @@ module.exports = {
   reverseVideo,
   mergeVideo,
   getDuration,
+  fileSha256Hex,
+  timemarkToSeconds,
 };

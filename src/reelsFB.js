@@ -23,7 +23,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const OVERLAY_MIN_GAP = 9;
   const OVERLAY_MAX_GAP = 22;
   const BLUR_STRENGTH = 6;
-  const VOICE_PITCH = 0.91;
+  const VOICE_PITCH = 0.84;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
@@ -512,9 +512,8 @@ async function splitVideo({
   introDir,
   assetsDir,
   audioDir,
-  partMinutes = 5,
+  partSeconds = 55,
 }) {
-  const partSeconds = partMinutes * 60;
   const MIN_PART_DURATION_SECONDS = 30;
   const MIN_INPUT_DURATION_SECONDS = 30;
   fs.mkdirSync(tempPartsDir, { recursive: true });
@@ -532,11 +531,7 @@ async function splitVideo({
       reverseVideoPath = await reverseVideo(sourcePath, outputPath);
       console.log("Reverse video path:", reverseVideoPath);
       cleanUp.push(reverseVideoPath);
-      concateVideo = await mergeVideo(
-        sourcePath,
-        reverseVideoPath,
-        outputPath,
-      );
+      concateVideo = await mergeVideo(sourcePath, reverseVideoPath, outputPath);
       console.log("Concate video path:", concateVideo);
       cleanUp.push(concateVideo);
       const concateDuration = await getDuration(concateVideo);
@@ -669,7 +664,7 @@ async function splitVideo({
         processedOutput,
       });
       cleanUp.push(splitPartPath);
-      cleanUp.push(extendedVideoPath)
+      cleanUp.push(extendedVideoPath);
     }
   } finally {
     cleanUp.forEach((file) => {
@@ -703,12 +698,12 @@ async function run() {
   for (const inputVideo of inputFiles) {
     const results = await splitVideo({
       inputVideo,
-      tempPartsDir:partDir,
+      tempPartsDir: partDir,
       processedOutputDir: partOutputDir,
       introDir,
       assetsDir,
       audioDir,
-      partMinutes: 0.8,
+      partSeconds: 50,
     });
 
     console.log(`Finished video processing: ${path.basename(inputVideo)}`);

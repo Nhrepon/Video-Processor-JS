@@ -17,7 +17,6 @@ function videoProcessor(
   videoPath,
   outputDir,
   tempPartDir,
-  introDir,
   assetsDir,
   audioDir,
 ) {
@@ -40,9 +39,9 @@ function videoProcessor(
   const OVERLAY_MIN_GAP = 9;
   const OVERLAY_MAX_GAP = 22;
   const BLUR_STRENGTH = 8;
-  const VOICE_PITCH = 0.88;
-  const ORIGINAL_AUDIO_VOLUME = 0.97;
-  const BED_AUDIO_VOLUME = 0.09;
+  const VOICE_PITCH = 0.84;
+  const ORIGINAL_AUDIO_VOLUME = 0.9;
+  const BED_AUDIO_VOLUME = 0.21;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
@@ -510,7 +509,7 @@ async function splitVideo({ inputVideo, tempPartsDir, processedOutputDir }) {
 
   while (startSeconds < totalDuration) {
     partIndex++;
-    let partSeconds = getRandomNumber(10, 19);
+    let partSeconds = getRandomNumber(50, 59);
     const durationSeconds = Math.min(partSeconds, totalDuration - startSeconds);
 
     console.log(
@@ -541,7 +540,7 @@ async function splitVideo({ inputVideo, tempPartsDir, processedOutputDir }) {
 }
 
 const inputDir = path.join(__dirname, "input");
-const introDir = path.join(__dirname, "intro");
+// const introDir = path.join(__dirname, "intro");
 const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
 const tempPartDir = path.join(__dirname, "output/parts");
@@ -564,7 +563,6 @@ async function run() {
       inputVideo,
       partOutputDir,
       tempPartDir,
-      introDir,
       assetsDir,
       audioDir,
     );
