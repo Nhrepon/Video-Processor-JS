@@ -208,6 +208,97 @@ async function mergeVideo(video1, video2, outputPath) {
   });
 }
 
+function atempoFilters(factor) {
+  factor = Number(factor) || 1;
+  if (factor >= 0.5 && factor <= 2.0) return `atempo=${factor}`;
+  const parts = [];
+  let remaining = factor;
+  while (remaining > 2.0) {
+    parts.push("atempo=2.0");
+    remaining /= 2.0;
+  }
+  while (remaining < 0.5) {
+    parts.push("atempo=0.5");
+    remaining *= 2.0;
+  }
+  parts.push(`atempo=${remaining.toFixed(6)}`);
+  return parts.join(",");
+}
+
+function escapeDrawtext(text) {
+  return text
+    .replace(/\\/g, "\\\\")
+    .replace(/:/g, "\\:")
+    .replace(/'/g, "\\'")
+    .replace(/%/g, "\\%");
+}
+
+function addInput(command, asset, overlayDuration) {
+  if (asset.type === "image") {
+    // loop image but limit duration to avoid infinite streams
+    command
+      .input(asset.path)
+      .inputOptions(["-loop", "1", "-t", String(overlayDuration + 2)]);
+  } else if (asset.label === "voiceover" || asset.label === "audio") {
+    command.input(asset.path).inputOptions(["-stream_loop", "-1"]);
+  } else if (asset.trimStart !== undefined || asset.trimEnd !== undefined) {
+    // Apply trimming for main video
+    command.input(asset.path);
+    if (asset.trimStart && asset.trimStart > 0) {
+      command.inputOptions([`-ss`, String(asset.trimStart)]);
+    }
+    if (asset.trimEnd && asset.trimEnd > 0 && asset.trimmedDuration) {
+      command.inputOptions([`-t`, String(asset.trimmedDuration)]);
+    }
+  } else {
+    command.input(asset.path);
+  }
+}
+
+function buildOverlayPlan(
+  mainDuration,
+  assetCount,
+  overlayDuration,
+  minGap,
+  maxGap,
+) {
+  const overlays = [];
+  let current = 5;
+  const dur = Math.max(0, Number(mainDuration) || 0);
+  const MAX_OVERLAYS = 100; // Increased overlay count
+
+  while (overlays.length < MAX_OVERLAYS) {
+    const gap = minGap + Math.random() * (maxGap - minGap);
+    current += gap;
+    if (current + overlayDuration > dur - 3) break;
+    overlays.push({
+      start: Number(current.toFixed(3)),
+      end: Number((current + overlayDuration).toFixed(3)),
+      assetIndex: Math.floor(Math.random() * assetCount),
+    });
+    current += overlayDuration;
+  }
+  return overlays;
+}
+
+function getMediaDuration(filePath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err)
+        return reject(
+          new Error(`ffprobe failed for ${filePath}: ${err.message}`),
+        );
+      const dur =
+        metadata && metadata.format && Number(metadata.format.duration);
+      if (!Number.isFinite(dur))
+        return reject(
+          new Error(`Could not determine duration for ${filePath}`),
+        );
+      resolve(dur);
+    });
+  });
+}
+
 module.exports = {
   removeFile,
   getRandomNumber,
@@ -217,4 +308,9 @@ module.exports = {
   getDuration,
   fileSha256Hex,
   timemarkToSeconds,
+  atempoFilters,
+  escapeDrawtext,
+  addInput,
+  buildOverlayPlan,
+  getMediaDuration,
 };

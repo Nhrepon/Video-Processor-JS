@@ -23,6 +23,11 @@ const {
   timemarkToSeconds,
   getDuration,
   removeFile,
+  atempoFilters,
+  escapeDrawtext,
+  addInput,
+  buildOverlayPlan,
+  getMediaDuration,
 } = require("./utility/utility");
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
@@ -33,13 +38,12 @@ const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
 const voiceOverDir = path.join(__dirname, "audio/voiceOver");
 const partDir = path.join(__dirname, "output/parts");
-const PART_MINUTES = 5;
+const PART_MINUTES = 9;
 // Trim settings - remove seconds from start and end
-const TRIM_START_SECONDS = 120; // Remove 90 seconds from start
+const TRIM_START_SECONDS = 1200; // Remove 90 seconds from start
 const TRIM_END_SECONDS = 100; // Remove 3 seconds from end
 
 async function run() {
-  console.log("ffmpeg version: ", ffmpeg.version);
   const inputFiles = fs
     .readdirSync(inputDir)
     .map((file) => path.join(inputDir, file));
@@ -47,15 +51,27 @@ async function run() {
     throw new Error(`No video found in input dir: ${inputDir}`);
   }
   for (const inputVideo of inputFiles) {
-    const results = await splitVideo({
-      inputVideo,
-      processDir: partDir,
-      partMinutes: PART_MINUTES,
-      trimStart: TRIM_START_SECONDS,
-      trimEnd: TRIM_END_SECONDS,
-    });
+    const duration = await getDuration(inputVideo);
+    console.log(`Duration of ${inputVideo}: ${duration}`);
+    if (duration > PART_MINUTES * 60) {
+      await splitVideo({
+        inputVideo,
+        processDir: partDir,
+        partMinutes: PART_MINUTES,
+        trimStart: TRIM_START_SECONDS,
+        trimEnd: TRIM_END_SECONDS,
+      });
+    } else {
+      await videoProcessor(
+        inputVideo,
+        outputDir,
+        assetsDir,
+        audioDir,
+        voiceOverDir,
+      );
+    }
+
     console.log(`Finished ${inputVideo}`);
-    console.log(`Total ${results.length} video processed...`);
   }
 }
 
@@ -173,12 +189,12 @@ function videoProcessor(
   audioDir,
   voiceOverDir,
 ) {
-  const SPEED_FACTOR = 1.08;
+  const SPEED_FACTOR = 1.06;
   const OUTPUT_WIDTH = 1440;
   const OUTPUT_HEIGHT = 1080;
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
   const HALF_HEIGHT = Math.floor(OUTPUT_HEIGHT / 2);
-  const OUTPUT_FPS = 30;
+  const OUTPUT_FPS = 28;
   const X264_PRESET = "fast";
   const CRF = "24";
   const OVERLAY_OPACITY = 0.05;
@@ -186,16 +202,17 @@ function videoProcessor(
   const OVERLAY_MIN_GAP = 8;
   const OVERLAY_MAX_GAP = 20;
   const BLUR_STRENGTH = 5;
-  const VOICE_PITCH = 0.96;
-  const ORIGINAL_AUDIO_VOLUME = 1.1;
-  const BED_AUDIO_VOLUME = 0.25;
-  const VOICEOVER_VOLUME = 0.5;
+  const VOICE_PITCH = 0.93;
+  const ORIGINAL_AUDIO_VOLUME = 1.0;
+  const BED_AUDIO_VOLUME = 0.12;
+  const VOICEOVER_VOLUME = 0.3;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
-  const showTopText = false;
+  const brandText = escapeDrawtext("Nhrepon.com");
   const showBottomText = true;
-  const hueShift = 0.48;
+  const showVoiceover = false;
+  const hueShift = 0.38;
 
   let fileName = path.basename(videoPath); // adjust if you run from repo root
   const fileExt = path.extname(fileName);
@@ -205,24 +222,6 @@ function videoProcessor(
     .replace(/\\/g, "\\\\")
     .replace(/:/g, "\\:");
   const logoPath = assetPath("logo.png");
-
-  function getMediaDuration(filePath) {
-    return new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(filePath, (err, metadata) => {
-        if (err)
-          return reject(
-            new Error(`ffprobe failed for ${filePath}: ${err.message}`),
-          );
-        const dur =
-          metadata && metadata.format && Number(metadata.format.duration);
-        if (!Number.isFinite(dur))
-          return reject(
-            new Error(`Could not determine duration for ${filePath}`),
-          );
-        resolve(dur);
-      });
-    });
-  }
 
   function getOverlayAssets() {
     if (!fs.existsSync(assetsDir)) return [];
@@ -245,74 +244,6 @@ function videoProcessor(
       }));
 
     return imageAssets;
-  }
-
-  function buildOverlayPlan(mainDuration, assetCount) {
-    const overlays = [];
-    let current = 5;
-    const dur = Math.max(0, Number(mainDuration) || 0);
-    const MAX_OVERLAYS = 100; // Increased overlay count
-
-    while (overlays.length < MAX_OVERLAYS) {
-      const gap =
-        OVERLAY_MIN_GAP + Math.random() * (OVERLAY_MAX_GAP - OVERLAY_MIN_GAP);
-      current += gap;
-      if (current + OVERLAY_DURATION > dur - 3) break;
-      overlays.push({
-        start: Number(current.toFixed(3)),
-        end: Number((current + OVERLAY_DURATION).toFixed(3)),
-        assetIndex: Math.floor(Math.random() * assetCount),
-      });
-      current += OVERLAY_DURATION;
-    }
-    return overlays;
-  }
-
-  function escapeDrawtext(text) {
-    return text
-      .replace(/\\/g, "\\\\")
-      .replace(/:/g, "\\:")
-      .replace(/'/g, "\\'")
-      .replace(/%/g, "\\%");
-  }
-
-  function atempoFilters(factor) {
-    factor = Number(factor) || 1;
-    if (factor >= 0.5 && factor <= 2.0) return `atempo=${factor}`;
-    const parts = [];
-    let remaining = factor;
-    while (remaining > 2.0) {
-      parts.push("atempo=2.0");
-      remaining /= 2.0;
-    }
-    while (remaining < 0.5) {
-      parts.push("atempo=0.5");
-      remaining *= 2.0;
-    }
-    parts.push(`atempo=${remaining.toFixed(6)}`);
-    return parts.join(",");
-  }
-
-  function addInput(command, asset) {
-    if (asset.type === "image") {
-      // loop image but limit duration to avoid infinite streams
-      command
-        .input(asset.path)
-        .inputOptions(["-loop", "1", "-t", String(OVERLAY_DURATION + 2)]);
-    } else if (asset.label === "voiceover" || asset.label === "audio") {
-      command.input(asset.path).inputOptions(["-stream_loop", "-1"]);
-    } else if (asset.trimStart !== undefined || asset.trimEnd !== undefined) {
-      // Apply trimming for main video
-      command.input(asset.path);
-      if (asset.trimStart && asset.trimStart > 0) {
-        command.inputOptions([`-ss`, String(asset.trimStart)]);
-      }
-      if (asset.trimEnd && asset.trimEnd > 0 && asset.trimmedDuration) {
-        command.inputOptions([`-t`, String(asset.trimmedDuration)]);
-      }
-    } else {
-      command.input(asset.path);
-    }
   }
 
   async function processVideo() {
@@ -363,7 +294,13 @@ function videoProcessor(
     const [mainOrigDur] = await Promise.all([getMediaDuration(inputVideo)]);
 
     const mainDuration = mainOrigDur / SPEED_FACTOR;
-    const overlays = buildOverlayPlan(mainDuration, overlayAssets.length);
+    const overlays = buildOverlayPlan(
+      mainDuration,
+      overlayAssets.length,
+      OVERLAY_DURATION,
+      OVERLAY_MIN_GAP,
+      OVERLAY_MAX_GAP,
+    );
 
     console.log(`Video duration: ${mainOrigDur.toFixed(2)}s`);
     console.log(`Using ${overlayAssets.length} overlay asset(s)`);
@@ -377,7 +314,7 @@ function videoProcessor(
       },
       { path: extraAudio, type: "audio", label: "audio" },
     ];
-    if (voiceOver) {
+    if (voiceOver && showVoiceover) {
       inputs.push({ path: voiceOver, type: "audio", label: "voiceover" });
     }
     inputs.push(
@@ -396,7 +333,8 @@ function videoProcessor(
       if (index < 0) throw new Error(`Missing ffmpeg input: ${label}`);
       return index;
     };
-    const overlayBaseIdx = voiceOver ? inputIndex("voiceover") + 1 : 2;
+    const overlayBaseIdx =
+      voiceOver && showVoiceover ? inputIndex("voiceover") + 1 : 2;
     // Debug: Log input order
     console.log("Input order:");
     inputs.forEach((inp, idx) => {
@@ -404,14 +342,22 @@ function videoProcessor(
     });
 
     const command = ffmpeg();
-    inputs.forEach((inp) => addInput(command, inp));
+    inputs.forEach((inp) => addInput(command, inp, OVERLAY_DURATION));
 
     const fc = [];
-    const gradeFilter = `hue=s=${hueShift},eq=contrast=1.04:brightness=0.01`;
+    // const gradeFilter = `hue=s=${hueShift},eq=contrast=1.04:brightness=0.01`;
     // const gradeFilter = `hue=s=${hueShift},eq=contrast=1.12:brightness=0.02:saturation=1.15,unsharp=7:7:1.5:5:5:0.8,eq=brightness=0.02:contrast=1.05:gamma=1.05`;
+    // Add a slight gamma and unsharp filter to heavily alter the frame signature
+    const gradeFilter = `hue=s=${hueShift},eq=contrast=1.08:brightness=0.02:gamma=1.05,unsharp=5:5:1.0:5:5:0.5`;
+
+    fc.push(
+      `[0:v]setpts=PTS/${SPEED_FACTOR},tmix=frames=2:weights="0.18 0.35 0.47",split=2[mainA][mainB]`,
+    );
+    // fc.push(
+    //   `[0:v]setpts=PTS/${SPEED_FACTOR},split=2,[mainA][mainB]`,
+    // );
 
     // Main: apply blur on half-res background, foreground at full res
-    fc.push(`[0:v]setpts=PTS/${SPEED_FACTOR},split=2[mainA][mainB]`);
     fc.push(
       `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[mainbg]`,
     );
@@ -423,12 +369,10 @@ function videoProcessor(
     overlays.forEach((ov, idx) => {
       const overallInputIndex = overlayBaseIdx + ov.assetIndex;
       const overlayLabel = `[ov${idx}]`;
-
       // scaled once; for image we already looped with -t but treat same in filter
       fc.push(
         `[${overallInputIndex}:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY}${overlayLabel}`,
       );
-
       const outLabel = `[mlayer${idx}]`;
       fc.push(
         `${currentMainLabel}${overlayLabel}overlay=0:0:enable='between(t,${ov.start},${ov.end})'${outLabel}`,
@@ -436,16 +380,9 @@ function videoProcessor(
       currentMainLabel = outLabel;
     });
 
-    const brandText = escapeDrawtext("Nhrepon.com");
-    if (showTopText) {
-      fc.push(
-        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=3:bordercolor=black:x=40:y=20:fix_bounds=true:enable='gte(t,0)'[maintoptext]`, //box=1:boxcolor=black@0.55:boxborderw=18:
-      );
-    }
-
     if (showBottomText) {
       fc.push(
-        `${showTopText ? "[maintoptext]" : currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
+        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
       );
     }
 
@@ -458,27 +395,23 @@ function videoProcessor(
       finalVideoLabel = "[mainvwithlogo]";
     }
 
-    const audioDur = mainOrigDur.toFixed(3);
-    const mainOrigVolume = ORIGINAL_AUDIO_VOLUME;
+    // Generate random modifiers for each video
+    const mainOrigVolume =
+      voiceOver && showVoiceover ? "1.2" : ORIGINAL_AUDIO_VOLUME;
 
-    // Original movie audio (speed-matched to main clip)
+    // Original movie audio (speed-matched to main clip) ,highpass=f=80,lowpass=f=12500
+    // `[0:a]aresample=44100,asetrate=44100*${VOICE_PITCH},${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},highpass=f=110,lowpass=f=8500,afftdn=nf=-25,equalizer=f=180:width_type=h:width=120:g=-2,equalizer=f=2800:width_type=h:width=1400:g=4,equalizer=f=5200:width_type=h:width=1800:g=2,acompressor=threshold=0.06:ratio=3:attack=12:release=180:makeup=1.7,alimiter=limit=0.96,volume=${mainOrigVolume}[mainorig]`,
     fc.push(
-      // `[0:a]aresample=44100,asetrate=44100*${VOICE_PITCH},${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},highpass=f=110,lowpass=f=8500,afftdn=nf=-25,equalizer=f=180:width_type=h:width=120:g=-2,equalizer=f=2800:width_type=h:width=1400:g=4,equalizer=f=5200:width_type=h:width=1800:g=2,acompressor=threshold=0.06:ratio=3:attack=12:release=180:makeup=1.7,alimiter=limit=0.96,volume=${mainOrigVolume}[mainorig]`,
-      `[0:a]aresample=44100,asetrate=44100*${VOICE_PITCH},atempo=1/${VOICE_PITCH},aphaser=type=t:delay=10:decay=0.5,aecho=0.8:0.9:1000:0.3,
-      aequalizer=f=200:width_type=h:width=100:g=-3,aequalizer=f=3000:width_type=h:width=1500:g=2,highpass=f=110,lowpass=f=8500,
-      afftdn=nf=-25,acontrast=0.2,equalizer=f=180:width_type=h:width=120:g=-2,equalizer=f=2800:width_type=h:width=1400:g=4,equalizer=f=5200:width_type=h:width=1800:g=2,
-      acompressor=threshold=0.06:ratio=3:attack=12:release=180:makeup=1.7,alimiter=limit=0.96,volume=${mainOrigVolume}[mainorig]`,
+      `[0:a]aresample=44100,asetrate=44100*${VOICE_PITCH},${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},aresample=44100,afftdn=nr=25:nf=-45:tn=1,volume=${mainOrigVolume}[mainorig]`,
     );
 
     // Bed music: stream_loop on input (aloop size=32767 truncates to ~0.7s)
-    fc.push(
-      `[1:a]${atempoFilters(SPEED_FACTOR)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
-    );
+    fc.push(`[1:a]atempo=1,volume=${BED_AUDIO_VOLUME}[mainbed]`);
 
-    if (voiceOver) {
+    if (voiceOver && showVoiceover) {
       const voiceOverInputIndex = inputIndex("voiceover");
       fc.push(
-        `[${voiceOverInputIndex}:a]${atempoFilters(SPEED_FACTOR)},volume=${VOICEOVER_VOLUME}[voiceovermix]`,
+        `[${voiceOverInputIndex}:a]atempo=1,afftdn=nr=25:nf=-45:tn=1,volume=${VOICEOVER_VOLUME}[voiceovermix]`,
       );
       fc.push(
         `[mainorig][mainbed][voiceovermix]amix=inputs=3:duration=first:dropout_transition=2[finala]`,
