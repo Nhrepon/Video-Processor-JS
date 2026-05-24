@@ -15,7 +15,6 @@
     "yt": "node src/yt.js",
     "split": "node src/split.js",
     "movie": "node src/movie.js"
-    
   },
   "keywords": [],
   "author": "",

@@ -234,7 +234,10 @@ function escapeDrawtext(text) {
 }
 
 function addInput(command, asset, overlayDuration) {
-  if (asset.type === "image") {
+  if (asset.label === "logo") {
+    // Logo should be looped infinitely to stay active throughout the whole video
+    command.input(asset.path).inputOptions(["-loop", "1"]);
+  } else if (asset.type === "image") {
     // loop image but limit duration to avoid infinite streams
     command
       .input(asset.path)
@@ -299,6 +302,28 @@ function getMediaDuration(filePath) {
   });
 }
 
+function getMediaMetadata(filePath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err)
+        return reject(
+          new Error(`ffprobe failed for ${filePath}: ${err.message}`),
+        );
+      const dur =
+        metadata && metadata.format && Number(metadata.format.duration);
+      if (!Number.isFinite(dur))
+        return reject(
+          new Error(`Could not determine duration for ${filePath}`),
+        );
+      const hasAudio =
+        metadata &&
+        metadata.streams &&
+        metadata.streams.some((s) => s.codec_type === "audio");
+      resolve({ duration: dur, hasAudio: !!hasAudio });
+    });
+  });
+}
+
 module.exports = {
   removeFile,
   getRandomNumber,
@@ -313,4 +338,5 @@ module.exports = {
   addInput,
   buildOverlayPlan,
   getMediaDuration,
+  getMediaMetadata,
 };

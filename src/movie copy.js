@@ -12,12 +12,11 @@
  */
 
 const ffmpeg = require("fluent-ffmpeg");
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+const ffprobePath = require("@ffprobe-installer/ffprobe").path;
+
 const fs = require("fs");
 const path = require("path");
-
-let ffmpegPath = "F:\\ffmpeg\\bin\\ffmpeg.exe";
-let ffprobePath = "F:\\ffmpeg\\bin\\ffprobe.exe";
-
 const {
   getRandomNumber,
   getAudioFiles,
@@ -30,9 +29,7 @@ const {
   addInput,
   buildOverlayPlan,
   getMediaDuration,
-  getMediaMetadata
 } = require("./utility/utility");
-
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
@@ -42,9 +39,10 @@ const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
 const voiceOverDir = path.join(__dirname, "audio/voiceOver");
 const partDir = path.join(__dirname, "output/parts");
-const PART_MINUTES = 9;
-const TRIM_START_SECONDS = 70;
-const TRIM_END_SECONDS = 50;
+const PART_MINUTES = 10;
+// Trim settings - remove seconds from start and end
+const TRIM_START_SECONDS = 1200; // Remove 90 seconds from start
+const TRIM_END_SECONDS = 100; // Remove 3 seconds from end
 
 async function run() {
   const inputFiles = fs
@@ -205,17 +203,17 @@ function videoProcessor(
   const OVERLAY_MIN_GAP = 8;
   const OVERLAY_MAX_GAP = 20;
   const BLUR_STRENGTH = 5;
-  const VOICE_PITCH = 0.88;
+  const VOICE_PITCH = 0.93;
   const ORIGINAL_AUDIO_VOLUME = 1.0;
-  const BED_AUDIO_VOLUME = 0.22;
-  const VOICEOVER_VOLUME = 0.2;
+  const BED_AUDIO_VOLUME = 0.12;
+  const VOICEOVER_VOLUME = 0.3;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
   const brandText = escapeDrawtext("Nhrepon.com");
   const showBottomText = true;
-  const showVoiceover = true;
-  const hueShift = 0.48;
+  const showVoiceover = false;
+  const hueShift = 0.38;
 
   let fileName = path.basename(videoPath); // adjust if you run from repo root
   const fileExt = path.extname(fileName);
@@ -294,7 +292,7 @@ function videoProcessor(
         "No overlay asset found. Add own-footage.* or own-image.* to assets/",
       );
 
-    const { duration: mainOrigDur, hasAudio } = await getMediaMetadata(inputVideo);
+    const [mainOrigDur] = await Promise.all([getMediaDuration(inputVideo)]);
 
     const mainDuration = mainOrigDur / SPEED_FACTOR;
     const overlays = buildOverlayPlan(
@@ -349,20 +347,27 @@ function videoProcessor(
 
     const fc = [];
     // const gradeFilter = `hue=s=${hueShift},eq=contrast=1.04:brightness=0.01`;
-    const gradeFilter = `hue=s=${hueShift},eq=contrast=1.12:brightness=0.02:gamma=1.05:saturation=1.15,unsharp=7:7:1.5:5:5:0.8,eq=brightness=0.02:contrast=1.05:gamma=1.05`;
+    // const gradeFilter = `hue=s=${hueShift},eq=contrast=1.12:brightness=0.02:saturation=1.15,unsharp=7:7:1.5:5:5:0.8,eq=brightness=0.02:contrast=1.05:gamma=1.05`;
+    // Add a slight gamma and unsharp filter to heavily alter the frame signature
+    const gradeFilter = `hue=s=${hueShift},eq=contrast=1.08:brightness=0.02:gamma=1.05,unsharp=5:5:1.0:5:5:0.5`;
 
-    fc.push(`[0:v]split=2[mainA][mainB]`);
+    // fc.push(`[0:v]setpts=PTS/${SPEED_FACTOR},tmix=frames=2:weights="0.18 0.35 0.47",split=2[mainA][mainB]`,);
+    fc.push(
+      `[0:v]setpts=PTS/${SPEED_FACTOR},tmix=frames=3:weights='0.18|0.35|0.47',split=2[mainA][mainB]`,
+    );
+    // fc.push(
+    //   `[0:v]setpts=PTS/${SPEED_FACTOR},split=2,[mainA][mainB]`,
+    // );
 
     // Main: apply blur on half-res background, foreground at full res
     fc.push(
       `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[mainbg]`,
     );
     fc.push(
-      `[mainB]hflip,tmix=frames=3:weights='0.18|0.35|0.47',scale=${OUTPUT_WIDTH}*1.5:${OUTPUT_HEIGHT}*1.5:force_original_aspect_ratio=increase,zoompan=z='1.03+0.02*sin(2*PI*in/250)':x='(iw-ow)/2':y='(ih-oh)/2':d=1:fps=${OUTPUT_FPS}:s=${OUTPUT_WIDTH}x${OUTPUT_HEIGHT},${gradeFilter}[mainfg]`,
+      `[mainB]hflip,scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
     );
 
-    fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase_orig]`);
-    fc.push(`[mainbase_orig]setpts=PTS/${SPEED_FACTOR}[mainbase]`);
+    fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
     let currentMainLabel = "[mainbase]";
     overlays.forEach((ov, idx) => {
       const overallInputIndex = overlayBaseIdx + ov.assetIndex;
@@ -397,61 +402,32 @@ function videoProcessor(
     const mainOrigVolume =
       voiceOver && showVoiceover ? "1.2" : ORIGINAL_AUDIO_VOLUME;
 
-    let finalAudioLabel;
-
-    if (hasAudio) {
-      // Original movie audio (speed-matched to main clip and resampled to 44100 Hz at the end)
-      fc.push(
-        `[0:a]aresample=44100,asetrate=44100*${VOICE_PITCH},${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${mainOrigVolume},aresample=44100[mainorig]`,
-      );
-
-      // Bed music: stream_loop on input
-      fc.push(`[1:a]atempo=1,volume=${BED_AUDIO_VOLUME}[mainbed]`);
-
-      if (voiceOver && showVoiceover) {
-        const voiceOverInputIndex = inputIndex("voiceover");
-        fc.push(
-          `[${voiceOverInputIndex}:a]atempo=1,afftdn=nr=25:nf=-45:tn=1,volume=${VOICEOVER_VOLUME}[voiceovermix]`,
-        );
-        fc.push(
-          `[mainorig][mainbed][voiceovermix]amix=inputs=3:duration=longest:dropout_transition=2[mixeda]`,
-        );
-      } else {
-        fc.push(
-          `[mainorig][mainbed]amix=inputs=2:duration=longest:dropout_transition=2[mixeda]`,
-        );
-      }
-      finalAudioLabel = "[mixeda]";
-    } else {
-      // Silent input video: only mix bed music and optional voiceover
-      fc.push(`[1:a]atempo=1,volume=${BED_AUDIO_VOLUME}[mainbed]`);
-
-      if (voiceOver && showVoiceover) {
-        const voiceOverInputIndex = inputIndex("voiceover");
-        fc.push(
-          `[${voiceOverInputIndex}:a]atempo=1,afftdn=nr=25:nf=-45:tn=1,volume=${VOICEOVER_VOLUME}[voiceovermix]`,
-        );
-        fc.push(
-          `[mainbed][voiceovermix]amix=inputs=2:duration=longest:dropout_transition=2[mixeda]`,
-        );
-      } else {
-        fc.push(`[mainbed]anull[mixeda]`);
-      }
-      finalAudioLabel = "[mixeda]";
-    }
-
-    // Trim the mixed audio stream to match the video duration exactly to prevent desync / trailing playback
+    // Original movie audio (speed-matched to main clip) ,highpass=f=80,lowpass=f=12500
+    // `[0:a]aresample=44100,asetrate=44100*${VOICE_PITCH},${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},highpass=f=110,lowpass=f=8500,afftdn=nf=-25,equalizer=f=180:width_type=h:width=120:g=-2,equalizer=f=2800:width_type=h:width=1400:g=4,equalizer=f=5200:width_type=h:width=1800:g=2,acompressor=threshold=0.06:ratio=3:attack=12:release=180:makeup=1.7,alimiter=limit=0.96,volume=${mainOrigVolume}[mainorig]`,
     fc.push(
-      `${finalAudioLabel}atrim=end=${mainDuration.toFixed(3)},asetpts=PTS-STARTPTS[finala]`,
+      `[0:a]aresample=44100,asetrate=44100*${VOICE_PITCH},${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},aresample=44100,afftdn=nr=25:nf=-45:tn=1,volume=${mainOrigVolume}[mainorig]`,
     );
 
-    // Periodic removal filter: drop 1s every 10s
-    fc.push(`${finalVideoLabel}select='if(gte(mod(t,10),1),1,0)',setpts=N/FRAME_RATE/TB[filteredv]`);
-    // Trim video to match main duration
-    fc.push(`[filteredv]trim=end=${mainDuration.toFixed(3)},setpts=PTS-STARTPTS[finalv]`);
-    fc.push(`[finalv]null[outv]`);
-    fc.push(`[finala]anull[outa]`);
-    
+    // Bed music: stream_loop on input (aloop size=32767 truncates to ~0.7s)
+    fc.push(`[1:a]atempo=1,volume=${BED_AUDIO_VOLUME}[mainbed]`);
+
+    if (voiceOver && showVoiceover) {
+      const voiceOverInputIndex = inputIndex("voiceover");
+      fc.push(
+        `[${voiceOverInputIndex}:a]atempo=1,afftdn=nr=25:nf=-45:tn=1,volume=${VOICEOVER_VOLUME}[voiceovermix]`,
+      );
+      fc.push(
+        `[mainorig][mainbed][voiceovermix]amix=inputs=3:duration=first:dropout_transition=2[finala]`,
+      );
+    } else {
+      fc.push(
+        `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[finala]`,
+      );
+    }
+
+    // concat
+    fc.push(`${finalVideoLabel}[finala]concat=n=1:v=1:a=1[outv][outa]`);
+
     const filterComplex = fc.join(";");
 
     let lastLoggedPercent = -1;
@@ -480,7 +456,6 @@ function videoProcessor(
       "+faststart",
       "-map_metadata",
       "-1",
-      "-shortest",
       "-metadata",
       `title=${fileBaseName} | short video`,
       "-metadata",
