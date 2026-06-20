@@ -15,18 +15,19 @@ const {
   fileSha256Hex,
   escapeDrawtext,
   getMediaMetadata,
+  trimVideo,
 } = require("./utility/utility");
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
 const inputDir = path.join(__dirname, "input");
 const outputDir = path.join(__dirname, "output");
-const introDir = path.join(__dirname, "intro");
+const introDir = path.join(__dirname, "intro/cartoon");
 const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
 const partDir = path.join(__dirname, "output/parts");
 
-const PART_MINUTES = 3;
+const PART_MINUTES = 4;
 const TRIM_START_SECONDS = 20;
 const TRIM_END_SECONDS = 15;
 
@@ -133,7 +134,7 @@ async function splitVideo({
     });
 
     console.log(
-      `Processing: ${partIndex} our of ${Math.ceil(totalDuration / seconds)}`,
+      `Processing: ${partIndex} out of ${Math.ceil(totalDuration / seconds)}`,
     );
 
     const processedOutput = await videoProcessor(
@@ -163,8 +164,8 @@ async function splitVideo({
 
 function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const SPEED_FACTOR = 1.06;
-  const OUTPUT_WIDTH = 1440; // 1440
-  const OUTPUT_HEIGHT = 1080;
+  const OUTPUT_WIDTH = 1080; // 1440
+  const OUTPUT_HEIGHT = 1440;
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
   const HALF_HEIGHT = Math.floor(OUTPUT_HEIGHT / 2);
   const OUTPUT_FPS = 30;
@@ -232,10 +233,12 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
     const inputVideo = videoPath;
     const introVideoList = fs.readdirSync(introDir);
-    const introVideo = introVideoList.map((file) => path.join(introDir, file))[getRandomNumber(0, introVideoList.length - 1)];
+    const introVideoPath = introVideoList.map((file) => path.join(introDir, file))[getRandomNumber(0, introVideoList.length - 1)];
+    const introVideo = await trimVideo(introVideoPath, 0, 10, partDir);
+    console.log(`Intro video: ${introVideo}`);
     const audioFiles = getAudioFiles(audioDir);
     if (audioFiles.length === 0) {
-      throw new Error("No audio files found in audio directory");
+      throw new Error("No extra audio files found in audio directory");
     }
     const extraAudio =
       audioFiles.length > 0
@@ -252,11 +255,11 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     const outputVideo = path.join(outputDir, outputFileName);
 
     if (!fs.existsSync(inputVideo))
-      throw new Error(`input.mp4 not found at ${inputVideo}`);
+      throw new Error(`input video not found at ${inputVideo}`);
     if (!fs.existsSync(introVideo))
-      throw new Error(`intro.mp4 not found at ${introVideo}`);
+      throw new Error(`intro video not found at ${introVideo}`);
     if (!fs.existsSync(extraAudio))
-      throw new Error(`audio.mp4 not found at ${extraAudio}`);
+      throw new Error(`extra audio not found at ${extraAudio}`);
 
     const overlayAssets = getOverlayAssets();
     if (overlayAssets.length === 0)
@@ -265,10 +268,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       );
 
     const { duration: mainOrigDur, hasAudio } = await getMediaMetadata(inputVideo);
-    const introOrigDur = showIntro ? await getMediaDuration(introVideo) : 0;
 
     const mainDuration = mainOrigDur / SPEED_FACTOR;
-    const introDuration = showIntro ? introOrigDur : 0;
+    const introDuration = showIntro ? await getMediaDuration(introVideo) : 0;
     const totalDuration = mainDuration + introDuration;
     const overlays = buildOverlayPlan(
       mainDuration,
@@ -375,10 +377,10 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       fc.push(`[mainv][mainlogo]overlay=W-w-10:10[mainvwithlogo]`);
     }
 
-    // Keep intro at original size: center-crop if too large, pad if too small.
+    // Scale intro to full output video size and trim to max 10s.
     if (showIntro) {
       fc.push(
-        `[${introIdx}:v]crop='min(iw,${OUTPUT_WIDTH})':'min(ih,${OUTPUT_HEIGHT})':(iw-min(iw\\,${OUTPUT_WIDTH}))/2:(ih-min(ih\\,${OUTPUT_HEIGHT}))/2,pad=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1[introv]`,
+        `[${introIdx}:v]trim=duration=${introDuration},setpts=PTS-STARTPTS,scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:(iw-ow)/2:(ih-oh)/2,setsar=1[introv]`,
       );
     }
 

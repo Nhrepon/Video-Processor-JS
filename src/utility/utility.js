@@ -324,6 +324,22 @@ function getMediaMetadata(filePath) {
   });
 }
 
+function trimVideo(video, start, end, outputPath){
+  return new Promise((resolve, reject) => {
+    ffmpeg(video)
+      .setStartTime(start)
+      .duration(end - start)
+      .outputOptions([
+        "-c",
+        "copy",
+      ])
+      .output(path.join(outputPath, "intro_trimmed.mp4"))
+      .on("end", () => resolve(path.join(outputPath, "intro_trimmed.mp4")))
+      .on("error", reject)
+      .run();
+  });
+}
+
 module.exports = {
   removeFile,
   getRandomNumber,
@@ -339,4 +355,5 @@ module.exports = {
   buildOverlayPlan,
   getMediaDuration,
   getMediaMetadata,
+  trimVideo,
 };

@@ -14,7 +14,8 @@
     "nhrepon": "node src/nhrepon.js",
     "yt": "node src/yt.js",
     "split": "node src/split.js",
-    "movie": "node src/movie.js"
+    "movie": "node src/movie.js",
+    "sports": "node src/sports.js"
   },
   "keywords": [],
   "author": "",
