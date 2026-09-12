@@ -27,7 +27,7 @@ const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
 const partDir = path.join(__dirname, "output/parts");
 
-const PART_MINUTES = 4;
+const PART_MINUTES = 3;
 const TRIM_START_SECONDS = 20;
 const TRIM_END_SECONDS = 15;
 
@@ -55,7 +55,7 @@ async function run() {
         outputDir,
         introDir,
         assetsDir,
-        audioDir
+        audioDir,
       );
     }
 
@@ -78,10 +78,7 @@ async function splitVideo({
       ffmpeg(inputVideo)
         .setStartTime(startSeconds)
         .duration(durationSeconds)
-        .outputOptions([
-          "-c",
-          "copy",
-        ])
+        .outputOptions(["-c", "copy"])
         .output(outputPath)
         .on("end", resolve)
         .on("error", reject)
@@ -233,7 +230,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
     const inputVideo = videoPath;
     const introVideoList = fs.readdirSync(introDir);
-    const introVideoPath = introVideoList.map((file) => path.join(introDir, file))[getRandomNumber(0, introVideoList.length - 1)];
+    const introVideoPath = introVideoList.map((file) =>
+      path.join(introDir, file),
+    )[getRandomNumber(0, introVideoList.length - 1)];
     const introVideo = await trimVideo(introVideoPath, 0, 10, partDir);
     console.log(`Intro video: ${introVideo}`);
     const audioFiles = getAudioFiles(audioDir);
@@ -267,7 +266,8 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         "No overlay asset found. Add own-footage.* or own-image.* to assets/",
       );
 
-    const { duration: mainOrigDur, hasAudio } = await getMediaMetadata(inputVideo);
+    const { duration: mainOrigDur, hasAudio } =
+      await getMediaMetadata(inputVideo);
 
     const mainDuration = mainOrigDur / SPEED_FACTOR;
     const introDuration = showIntro ? await getMediaDuration(introVideo) : 0;
@@ -349,12 +349,12 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
       // Scale overlay input and apply opacity
       fc.push(
-        `[${overallInputIndex}:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY}${overlayLabel}`
+        `[${overallInputIndex}:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY}${overlayLabel}`,
       );
 
       const outLabel = `[mlayer${idx}]`;
       fc.push(
-        `${currentMainLabel}${overlayLabel}overlay=0:0:enable='between(t,${ov.start},${ov.end})'${outLabel}`
+        `${currentMainLabel}${overlayLabel}overlay=0:0:enable='between(t,${ov.start},${ov.end})'${outLabel}`,
       );
       currentMainLabel = outLabel;
     });
@@ -412,7 +412,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     // Ensure final video matches full duration
     fc.push(`[${hasLogo ? "mainvwithlogo" : "mainv"}]setpts=PTS[finalv]`);
     fc.push(`[finalv]trim=duration=${totalDuration}[finalv_trim]`);
-    
+
     // Concat intro if enabled
     if (showIntro) {
       fc.push(

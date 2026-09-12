@@ -1,6 +1,6 @@
 {
   "name": "videoprocessor",
-  "version": "1.0.0",
+  "version": "4.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,8 @@
     "yt": "node src/yt.js",
     "split": "node src/split.js",
     "movie": "node src/movie.js",
-    "sports": "node src/sports.js"
+    "sports": "node src/sports.js",
+    "diy": "node src/diy.js"
   },
   "keywords": [],
   "author": "",
