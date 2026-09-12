@@ -6,4 +6,7 @@ intro
 output
 bottom
 assets/intro.mp4
+src/config/*.json
+.agents
+.claude
 

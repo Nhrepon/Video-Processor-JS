@@ -1,0 +1,41 @@
+[2026-09-12T13:13:11.423Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T13:13:11.427Z] Mode: DRAFT | gate: 0 blocklist term(s)
+[2026-09-12T13:13:11.427Z] DRY RUN
+[2026-09-12T13:13:11.427Z]   PASS Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-01-mtydmwt4-17348-36914-by-nhrepon.mp4
+[2026-09-12T13:13:11.428Z]   PASS Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-02-mtydmwt4-17348-83322-by-nhrepon.mp4
+[2026-09-12T13:13:11.428Z]   PASS Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-03-mtydmwt4-17348-71449-by-nhrepon.mp4
+[2026-09-12T13:13:11.428Z]   PASS Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-04-mtydmwt4-17348-60336-by-nhrepon.mp4
+[2026-09-12T13:13:11.428Z]   PASS Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-05-mtydmwt4-17348-20974-by-nhrepon.mp4
+[2026-09-12T13:13:18.698Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T13:13:18.705Z] Mode: DRAFT | gate: 9 blocklist term(s)
+[2026-09-12T13:13:18.705Z] DRY RUN
+[2026-09-12T13:13:18.706Z]   BLOCK Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-01-mtydmwt4-17348-36914-by-nhrepon.mp4 — filename matches blocklist term "tom and jerry"
+[2026-09-12T13:13:18.706Z]   BLOCK Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-02-mtydmwt4-17348-83322-by-nhrepon.mp4 — filename matches blocklist term "tom and jerry"
+[2026-09-12T13:13:18.706Z]   BLOCK Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-03-mtydmwt4-17348-71449-by-nhrepon.mp4 — filename matches blocklist term "tom and jerry"
+[2026-09-12T13:13:18.706Z]   BLOCK Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-04-mtydmwt4-17348-60336-by-nhrepon.mp4 — filename matches blocklist term "tom and jerry"
+[2026-09-12T13:13:18.706Z]   BLOCK Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-05-mtydmwt4-17348-20974-by-nhrepon.mp4 — filename matches blocklist term "tom and jerry"
+[2026-09-12T13:14:22.506Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T13:14:22.509Z] Mode: DRAFT | gate: 9 blocklist term(s)
+[2026-09-12T13:14:22.509Z] DRY RUN
+[2026-09-12T13:14:22.509Z]   PASS Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-01-mtydmwt4-17348-36914-by-nhrepon.mp4
+[2026-09-12T13:14:22.509Z]   PASS Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-02-mtydmwt4-17348-83322-by-nhrepon.mp4
+[2026-09-12T13:14:22.509Z]   PASS Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-03-mtydmwt4-17348-71449-by-nhrepon.mp4
+[2026-09-12T14:10:55.805Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T14:10:55.814Z] Mode: PUBLISHED | gate: 6 blocklist term(s)
+[2026-09-12T14:10:55.814Z] DRY RUN
+[2026-09-12T14:10:55.815Z]   PASS Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-01-mtydmwt4-17348-36914-by-nhrepon.mp4
+[2026-09-12T14:17:18.181Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T14:17:18.184Z] Mode: PUBLISHED | gate: 6 blocklist term(s)
+[2026-09-12T14:17:18.184Z] Uploading Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-13-mtydmwt4-17348-60378-by-nhrepon.mp4 (PUBLISHED) ...
+[2026-09-12T14:17:18.732Z] FAIL Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-13-mtydmwt4-17348-60378-by-nhrepon.mp4 - (#200) Subject does not have permission to post videos on this target, due to lack of pages_manage_posts permission.
+[2026-09-12T14:17:18.732Z] Done. uploaded=0 blocked=0 failed=1
+[2026-09-12T14:20:39.210Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T14:20:39.212Z] Mode: PUBLISHED | gate: 6 blocklist term(s)
+[2026-09-12T14:20:39.212Z] Uploading Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-25-mtydmwt4-17348-83948-by-nhrepon.mp4 (PUBLISHED) ...
+[2026-09-12T14:20:39.729Z] FAIL Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-25-mtydmwt4-17348-83948-by-nhrepon.mp4 - (#200) Subject does not have permission to post videos on this target, due to lack of pages_manage_posts permission.
+[2026-09-12T14:20:39.729Z] Done. uploaded=0 blocked=0 failed=1
+[2026-09-12T14:23:35.352Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T14:23:35.354Z] Mode: PUBLISHED | gate: 6 blocklist term(s)
+[2026-09-12T14:23:35.355Z] Uploading Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-12-mtydmwt4-17348-55150-by-nhrepon.mp4 (PUBLISHED) ...
+[2026-09-12T14:23:35.757Z] FAIL Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-12-mtydmwt4-17348-55150-by-nhrepon.mp4 - (#200) Subject does not have permission to post videos on this target, due to lack of pages_manage_posts permission.
+[2026-09-12T14:23:35.757Z] Done. uploaded=0 blocked=0 failed=1

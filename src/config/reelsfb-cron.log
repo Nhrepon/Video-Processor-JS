@@ -1,0 +1,23 @@
+  File "E:\NH\NextJS\VideoProcessor\src\postReelsFB.js", line 46
+    // Fisher-Yates partial shuffle — O(count) instead of O(n) splice per pick.
+                                    ^
+SyntaxError: invalid character '—' (U+2014)
+  File "E:\NH\NextJS\VideoProcessor\src\postReelsFB.js", line 58
+    // copyright oracle — it just refuses to auto-publish anything whose filename
+                        ^
+SyntaxError: invalid character '—' (U+2014)
+[2026-09-12T14:17:18.181Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T14:17:18.184Z] Mode: PUBLISHED | gate: 6 blocklist term(s)
+[2026-09-12T14:17:18.184Z] Uploading Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-13-mtydmwt4-17348-60378-by-nhrepon.mp4 (PUBLISHED) ...
+[2026-09-12T14:17:18.732Z] FAIL Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-13-mtydmwt4-17348-60378-by-nhrepon.mp4 - (#200) Subject does not have permission to post videos on this target, due to lack of pages_manage_posts permission.
+[2026-09-12T14:17:18.732Z] Done. uploaded=0 blocked=0 failed=1
+[2026-09-12T14:20:39.210Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T14:20:39.212Z] Mode: PUBLISHED | gate: 6 blocklist term(s)
+[2026-09-12T14:20:39.212Z] Uploading Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-25-mtydmwt4-17348-83948-by-nhrepon.mp4 (PUBLISHED) ...
+[2026-09-12T14:20:39.729Z] FAIL Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-25-mtydmwt4-17348-83948-by-nhrepon.mp4 - (#200) Subject does not have permission to post videos on this target, due to lack of pages_manage_posts permission.
+[2026-09-12T14:20:39.729Z] Done. uploaded=0 blocked=0 failed=1
+[2026-09-12T14:23:35.352Z] Reels 30 total, 30 eligible (dir E:\NH\NextJS\VideoProcessor\src\output\partOutput\reelsFB)
+[2026-09-12T14:23:35.354Z] Mode: PUBLISHED | gate: 6 blocklist term(s)
+[2026-09-12T14:23:35.355Z] Uploading Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-12-mtydmwt4-17348-55150-by-nhrepon.mp4 (PUBLISHED) ...
+[2026-09-12T14:23:35.757Z] FAIL Kick-It-with-Tom-and-Jerry!-⚽️-Sports-Moments-_-Tom-&-Jerry-_-#cartoonmornings--mtydmwt4-17348-part-12-mtydmwt4-17348-55150-by-nhrepon.mp4 - (#200) Subject does not have permission to post videos on this target, due to lack of pages_manage_posts permission.
+[2026-09-12T14:23:35.757Z] Done. uploaded=0 blocked=0 failed=1
