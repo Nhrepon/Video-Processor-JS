@@ -9,4 +9,5 @@ assets/intro.mp4
 src/config/*.json
 .agents
 .claude
+src/autopost/video
 

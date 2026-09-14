@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const CONFIG_PATH = path.join(__dirname, "..", "config", "fb.json");
+const CONFIG_PATH = path.join(__dirname, "config", "fb.json");
 
 function loadConfig({ requireToken = true } = {}) {
   if (!fs.existsSync(CONFIG_PATH)) {
@@ -54,6 +54,7 @@ async function postReel({
   videoPath,
   description = "",
   published = true,
+  scheduledPublishTime,
   thumbOffsetMs,
   config,
 }) {
@@ -105,6 +106,16 @@ async function postReel({
     description,
     access_token: token,
   };
+
+  // Server-side scheduling: Facebook itself publishes the reel at this time
+  // (unix seconds), so publishing no longer depends on this machine running.
+  // video_state=SCHEDULED overrides the published flag above.
+  if (Number.isFinite(scheduledPublishTime)) {
+    finishParams.video_state = "SCHEDULED";
+    finishParams.scheduled_publish_time = String(
+      Math.max(0, Math.floor(scheduledPublishTime)),
+    );
+  }
 
   if (Number.isFinite(thumbOffsetMs)) {
     finishParams.thumb_offset = String(Math.max(0, Math.floor(thumbOffsetMs)));

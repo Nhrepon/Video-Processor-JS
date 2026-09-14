@@ -4,41 +4,35 @@ const ffprobePath = require("@ffprobe-installer/ffprobe").path;
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { getDuration, reverseVideo, mergeVideo } = require("./utility/utility");
+const { getDuration, reverseVideo, mergeVideo } = require("../utility/utility");
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
 // --------------------------------------------------------------------- paths
 
-const INPUT_DIR = path.join(__dirname, "input");
-const INTRO_DIR = path.join(__dirname, "intro");
-const ASSETS_DIR = path.join(__dirname, "assets");
-const AUDIO_DIR = path.join(__dirname, "audio");
-const PART_DIR = path.join(__dirname, "output/parts");
-const PART_OUTPUT_DIR = path.join(__dirname, "output/partOutput/reelsFB");
-
-// Unique per process so two runs never collide on temp or output names.
+const INPUT_DIR = path.join(__dirname, "..", "input");
+const INTRO_DIR = path.join(__dirname, "..", "intro");
+const ASSETS_DIR = path.join(__dirname, "..", "assets");
+const AUDIO_DIR = path.join(__dirname, "..", "audio");
+const PART_DIR = path.join(__dirname, "..", "output", "tempParts"); // temp cut segments
+const PART_OUTPUT_DIR = path.join(__dirname, "..", "output", "reels"); // final 9:16 reels
+const OUTPUT_DIR = path.join(__dirname, "..", "output");
 const RUN_ID = `${Date.now().toString(36)}-${process.pid}`;
 
-// ------------------------------------------------------------------ features
-// Toggles for the optional layers. Flip these instead of editing the filter
-// graph — each one gates both its input and its chain, so a disabled layer is
-// never opened, never decoded, and never referenced by the graph.
-//
-//   intro    — prepend the first clip in intro/ before the main video
-//   logo     — burn assets/logo.png into the corner
-//   overlay  — splice own-footage.* / own-image.* inserts into the timeline
-//   captions — burn assets/captions.srt if present
-//
-// The brand and CTA drawtext are not optional; they are baked into the main
-// chain. Add a flag here if you need to kill those too.
 
 const FEATURES = {
-  intro: true,
-  logo: true,
+  intro: false,
+  brandText: false,
   overlay: false,
-  captions: true,
+  logo: false,
+  partDuration: 55,
+  minInputSeconds: 20,
+  minPartSeconds: 15,
+  speedFactor: 1.03,
+  blur: true,
+  trimStart: 0,
+  trimEnd: 0,
 };
 
 // -------------------------------------------------------------------- config
@@ -47,24 +41,11 @@ const VIDEO = {
   width: 1080,
   height: 1920,
   fps: 30,
-  fgHeight: 1080,
+  fgHeight: 1520,
   crf: "23",
   preset: "fast",
-  // 1 = untouched timeline. Anything else rewrites PTS *and* pitch-corrects
-  // audio, which reads as tampering rather than editing.
-  speed: 1,
   blur: 8,
-  // Light grade only. Saturation is kept near source on purpose.
   grade: "eq=contrast=1.04:brightness=0.01:saturation=0.96",
-};
-
-// Reels chrome covers roughly the top 180px and the bottom 420px of a
-// 1080x1920 frame: username, caption, CTA row, audio bar. Anything drawn
-// inside those bands is invisible in-feed, so all burned-in text lives
-// between them.
-const SAFE = {
-  top: 180,
-  bottom: 420,
 };
 
 const OVERLAY = {
@@ -73,16 +54,12 @@ const OVERLAY = {
   maxGap: 26,
   leadIn: 5,
   tailOut: 3,
-  // 1 = fully opaque. Do not drop this to watermark territory (0.1) — a
-  // translucent film over the whole runtime reads as a veil, not as content.
-  // These are short inserts, so they should look like real cuts.
   opacity: 0.85,
-  // Cross-fade seconds at each end. Clamped to duration/2 at use site.
   fade: 0.25,
 };
 
 const AUDIO = {
-  bedVolume: 0.22,
+  bedVolume: 0.09,
   targetLufs: -14,
   truePeak: -1.5,
   lra: 11,
@@ -95,8 +72,8 @@ const FONTS = {
   captionMarginV: 340,
 };
 
-const MIN_PART_SECONDS = 30;
-const MIN_INPUT_SECONDS = 30;
+const MIN_PART_SECONDS = FEATURES.minPartSeconds;
+const MIN_INPUT_SECONDS = FEATURES.minInputSeconds;
 
 // Kill a render that has made no progress for this long. Guards against a
 // hung ffmpeg holding the batch open forever.
@@ -365,7 +342,7 @@ async function videoProcessor({
     introVideo && fs.existsSync(introVideo) ? await probeMedia(introVideo) : null;
   const useIntro = Boolean(introProbe && introProbe.hasVideo);
 
-  const mainDuration = mainProbe.duration / VIDEO.speed;
+  const mainDuration = mainProbe.duration / FEATURES.speedFactor;
   const introDuration = useIntro ? introProbe.duration : 0;
   const totalDuration = introDuration + mainDuration;
 
@@ -434,19 +411,36 @@ async function videoProcessor({
   const halfW = Math.floor(VIDEO.width / 2);
   const halfH = Math.floor(VIDEO.height / 2);
 
-  // Blurred full-frame fill behind, sharp band in front. No mirror, no crop
-  // games — the frame stays the frame, it is just reframed for 9:16.
-  fc.push(`[${idx.main}:v]setpts=PTS/${VIDEO.speed},split=2[mainA][mainB]`);
-  fc.push(
-    `[mainA]scale=${halfW}:${halfH}:force_original_aspect_ratio=increase,` +
-      `crop=${halfW}:${halfH},boxblur=${VIDEO.blur},` +
-      `scale=${VIDEO.width}:${VIDEO.height},${VIDEO.grade},setsar=1[mainbg]`,
-  );
-  fc.push(
-    `[mainB]scale=${VIDEO.width}:${VIDEO.fgHeight}:force_original_aspect_ratio=increase,` +
-      `crop=${VIDEO.width}:${VIDEO.fgHeight},${VIDEO.grade},setsar=1[mainfg]`,
-  );
-  fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
+  // Main video reframe for 9:16.
+  //   FEATURES.blur = true  -> blurred full-frame fill behind, sharp band in front
+  //   FEATURES.blur = false -> main video covers the whole frame, full view
+  if (FEATURES.blur) {
+    // Blurred full-frame fill BEHIND, sharp video on top. The sharp layer is
+    // scaled to the full width and cover-fit to VIDEO.fgHeight (tall), then
+    // centered, so it fills the whole frame and the blurred original only shows
+    // as thin top/bottom strips. (Previously the sharp band was scaled to
+    // FEATURES.blurSectionHeight px — which was set to 100 — so it became a tiny
+    // 100px sliver centered in the middle with full-frame blur everywhere else.)
+    fc.push(`[${idx.main}:v]setpts=PTS/${FEATURES.speedFactor},split=2[mainA][mainB]`);
+    fc.push(
+      `[mainA]scale=${halfW}:${halfH}:force_original_aspect_ratio=increase,` +
+        `crop=${halfW}:${halfH},boxblur=${VIDEO.blur},` +
+        `scale=${VIDEO.width}:${VIDEO.height},${VIDEO.grade},setsar=1[mainbg]`,
+    );
+    fc.push(
+      `[mainB]scale=${VIDEO.width}:${VIDEO.fgHeight}:force_original_aspect_ratio=increase,` +
+        `crop=${VIDEO.width}:${VIDEO.fgHeight},${VIDEO.grade},setsar=1[mainfg]`,
+    );
+    fc.push(`[mainbg][mainfg]overlay=0:(H-h)/2[mainbase]`);
+  } else {
+    // No blur: scale the whole frame to cover 9:16 and crop the overflow so the
+    // full video is visible (full view), no letterbox, no blurred band.
+    fc.push(
+      `[${idx.main}:v]setpts=PTS/${FEATURES.speedFactor},` +
+        `scale=${VIDEO.width}:${VIDEO.height}:force_original_aspect_ratio=increase,` +
+        `crop=${VIDEO.width}:${VIDEO.height},${VIDEO.grade},setsar=1[mainbase]`,
+    );
+  }
 
   // Overlay inserts. Each slot is a real cut, not a veil:
   //   trim       — take only the slot's worth of frames
@@ -514,21 +508,34 @@ async function videoProcessor({
     });
   }
   // --- text overlays --------------------------------------------------------
+  // Gated by FEATURES.brandText. When off, the chain passes straight through
+  // (current -> [maintexted]) so the logo/captions steps below still have a
+  // valid input label to chain from.
   const brandText = escapeDrawtext("Nhrepon.com");
   const ctaText = escapeDrawtext("Like, Comment and Share for more videos!");
 
-  fc.push(
-    `${current}drawtext=text='${brandText}':fontfile='${drawtextFont}':` +
-      `fontcolor=white:fontsize=${FONTS.brandSize}:borderw=2:bordercolor=black:` +
-      `x=40:y=40:fix_bounds=true[maintoptext]`,
-  );
-  fc.push(
-    `[maintoptext]drawtext=text='${ctaText}':fontfile='${drawtextFont}':` +
-      `fontcolor=white:fontsize=${FONTS.ctaSize}:borderw=2:bordercolor=black:` +
-      `x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true,setsar=1[maintexted]`,
-  );
+  let textOut = current;
+  if (FEATURES.brandText) {
+    fc.push(
+      `${current}drawtext=text='${brandText}':fontfile='${drawtextFont}':` +
+        `fontcolor=white:fontsize=${FONTS.brandSize}:borderw=2:bordercolor=black:` +
+        `x=40:y=40:fix_bounds=true[maintoptext]`,
+    );
+    fc.push(
+      `[maintoptext]drawtext=text='${ctaText}':fontfile='${drawtextFont}':` +
+        `fontcolor=white:fontsize=${FONTS.ctaSize}:borderw=2:bordercolor=black:` +
+        `x=(w-text_w)/2:y=h-text_h-40:fix_bounds=true,setsar=1[maintexted]`,
+    );
+    textOut = "[maintexted]";
+  } else {
+    // brandText off: pass the video stream through unchanged. Use a video-only
+    // filter (setsar) rather than `null` — `null` declares an audio output pad
+    // that would be left unconnected and break the graph.
+    fc.push(`${current}setsar=1[maintexted]`);
+    textOut = "[maintexted]";
+  }
 
-  let preLogo = "[maintexted]";
+  let preLogo = textOut;
   if (useCaptions) {
     const subPath = escapeSubtitlesPath(captionsPath);
     const style =
@@ -545,7 +552,7 @@ async function videoProcessor({
     fc.push(`[${idx.logo}:v]scale=150:-1,setsar=1,format=rgba[mainlogo]`);
     fc.push(`${preLogo}[mainlogo]overlay=W-w-10:20[mainv]`);
   } else {
-    fc.push(`${preLogo}null[mainv]`);
+    fc.push(`${preLogo}setsar=1[mainv]`);
   }
 
   fc.push(`[mainv]fps=${VIDEO.fps},setsar=1,format=yuv420p[mainvnorm]`);
@@ -558,7 +565,7 @@ async function videoProcessor({
     );
     fc.push(`[introv][mainvnorm]concat=n=2:v=1:a=0[vout]`);
   } else {
-    fc.push(`[mainvnorm]null[vout]`);
+    fc.push(`[mainvnorm]setsar=1[vout]`);
   }
 
   // --- audio graph ----------------------------------------------------------
@@ -834,6 +841,41 @@ async function splitVideo({
 
   if (!Number.isFinite(totalDuration) || totalDuration <= 0) {
     throw new Error(`Could not determine duration for ${inputVideo}`);
+  }
+
+  // Trim the MAIN video ONCE here, before splitting, so the head/tail cut is
+  // applied a single time — never per-part. FEATURES.trimStart drops the opening
+  // seconds, FEATURES.trimEnd drops the closing seconds. Zero means no trim.
+  if (FEATURES.trimStart > 0 || FEATURES.trimEnd > 0) {
+    const trimmedPath = path.join(
+      tempPartsDir,
+      `${path.parse(inputVideo).name}-${RUN_ID}-trimmed.mp4`,
+    );
+    const dur = Math.max(
+      0,
+      totalDuration - FEATURES.trimEnd - FEATURES.trimStart,
+    );
+    if (dur <= 0) {
+      throw new Error(
+        `Trimming removes the whole clip (${totalDuration}s - ${FEATURES.trimStart}s - ${FEATURES.trimEnd}s <= 0)`,
+      );
+    }
+    await new Promise((resolve, reject) => {
+      ffmpeg()
+        .input(inputVideo)
+        .inputOptions(["-ss", String(FEATURES.trimStart)])
+        .outputOptions(["-t", dur.toFixed(3), "-c", "copy", "-avoid_negative_ts", "make_zero"])
+        .output(trimmedPath)
+        .on("end", resolve)
+        .on("error", reject)
+        .run();
+    });
+    sourceVideo = trimmedPath;
+    registerCleanup(trimmedPath);
+    totalDuration = await getDuration(sourceVideo);
+    console.log(
+      `Trimmed main video (start ${FEATURES.trimStart}s / end ${FEATURES.trimEnd}s) -> ${totalDuration.toFixed(2)}s`,
+    );
   }
 
   if (totalDuration < MIN_INPUT_SECONDS) {

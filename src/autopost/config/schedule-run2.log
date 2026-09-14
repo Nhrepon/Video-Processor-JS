@@ -1,0 +1,31 @@
+[2026-09-14T08:22:48Z] === schedule_pending dry=False === 13 pending reel(s), first publish 2026-09-18T23:17:14+00:00
+[2026-09-14T08:22:48.975Z] Reels 42 total, 13 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-14T08:22:48.979Z] Mode: SCHEDULED from 2026-09-18T23:17:14.000Z (gaps 120-180min) | gate: 6 blocklist term(s)
+[2026-09-14T08:22:48.979Z] Uploading cartoonmornings-pettiness-art-ep26.mp4 (SCHEDULED 2026-09-18T23:17:14.000Z) | manifest-unique | thumb @12688ms
+[2026-09-14T08:22:59.325Z] OK cartoonmornings-pettiness-art-ep26.mp4 -> video_id 1538415711423574 (SCHEDULED)
+[2026-09-14T08:22:59.325Z] Uploading cartoonmornings-cartoon-logic-ep19.mp4 (SCHEDULED 2026-09-19T01:21:34.092Z) | manifest-unique | thumb @11800ms
+[2026-09-14T08:23:12.415Z] OK cartoonmornings-cartoon-logic-ep19.mp4 -> video_id 3584449565063389 (SCHEDULED)
+[2026-09-14T08:23:12.415Z] Uploading cartoonmornings-tom-backfires-ep32.mp4 (SCHEDULED 2026-09-19T04:18:09.746Z) | manifest-unique | thumb @3195ms
+[2026-09-14T08:23:24.074Z] OK cartoonmornings-tom-backfires-ep32.mp4 -> video_id 1994781744561957 (SCHEDULED)
+[2026-09-14T08:23:24.074Z] Uploading cartoonmornings-jerry-main-character-ep25.mp4 (SCHEDULED 2026-09-19T07:13:30.135Z) | manifest-unique | thumb @4522ms
+[2026-09-14T08:23:37.386Z] OK cartoonmornings-jerry-main-character-ep25.mp4 -> video_id 1862490665123925 (SCHEDULED)
+[2026-09-14T08:23:37.387Z] Uploading cartoonmornings-jerry-stealth-wins-ep29.mp4 (SCHEDULED 2026-09-19T09:55:49.256Z) | manifest-unique | thumb @15614ms
+[2026-09-14T08:23:50.659Z] OK cartoonmornings-jerry-stealth-wins-ep29.mp4 -> video_id 1743912780208358 (SCHEDULED)
+[2026-09-14T08:23:50.659Z] Uploading cartoonmornings-face-off-round2-ep21.mp4 (SCHEDULED 2026-09-19T12:50:28.892Z) | manifest-unique | thumb @7334ms
+[2026-09-14T08:24:02.240Z] OK cartoonmornings-face-off-round2-ep21.mp4 -> video_id 1061596256662625 (SCHEDULED)
+[2026-09-14T08:24:02.240Z] Uploading cartoonmornings-elite-timing-ep30.mp4 (SCHEDULED 2026-09-19T15:09:24.009Z) | manifest-unique | thumb @9761ms
+[2026-09-14T08:24:16.978Z] OK cartoonmornings-elite-timing-ep30.mp4 -> video_id 981847521594666 (SCHEDULED)
+[2026-09-14T08:24:16.978Z] Uploading cartoonmornings-cartoon-physics-ep24.mp4 (SCHEDULED 2026-09-19T17:38:16.462Z) | manifest-unique | thumb @13103ms
+[2026-09-14T08:24:29.963Z] OK cartoonmornings-cartoon-physics-ep24.mp4 -> video_id 1562331075578044 (SCHEDULED)
+[2026-09-14T08:24:29.963Z] Uploading cartoonmornings-mouse-has-aura-ep35.mp4 (SCHEDULED 2026-09-19T20:19:59.368Z) | manifest-unique | thumb @15706ms
+[2026-09-14T08:24:40.828Z] OK cartoonmornings-mouse-has-aura-ep35.mp4 -> video_id 1940306400000010 (SCHEDULED)
+[2026-09-14T08:24:40.829Z] Uploading cartoonmornings-tom-tries-again-ep17.mp4 (SCHEDULED 2026-09-19T22:55:00.858Z) | manifest-unique | thumb @14533ms
+[2026-09-14T08:24:52.317Z] OK cartoonmornings-tom-tries-again-ep17.mp4 -> video_id 1535266618354621 (SCHEDULED)
+[2026-09-14T08:24:52.318Z] Uploading cartoonmornings-unseen-plot-twist-ep10.mp4 (SCHEDULED 2026-09-20T01:39:38.179Z) | manifest-unique | thumb @13397ms
+[2026-09-14T08:25:04.763Z] OK cartoonmornings-unseen-plot-twist-ep10.mp4 -> video_id 1463026908972760 (SCHEDULED)
+[2026-09-14T08:25:04.763Z] Uploading cartoonmornings-jerry-heist-ep33.mp4 (SCHEDULED 2026-09-20T03:58:38.035Z) | manifest-unique | thumb @13654ms
+[2026-09-14T08:25:16.609Z] OK cartoonmornings-jerry-heist-ep33.mp4 -> video_id 927251416665816 (SCHEDULED)
+[2026-09-14T08:25:16.610Z] Uploading cartoonmornings-chase-music-hits-ep15.mp4 (SCHEDULED 2026-09-20T06:18:22.609Z) | manifest-unique | thumb @16659ms
+[2026-09-14T08:25:29.658Z] OK cartoonmornings-chase-music-hits-ep15.mp4 -> video_id 1438512264798372 (SCHEDULED)
+[2026-09-14T08:25:29.658Z] Done. uploaded=13 blocked=0 failed=0
+[2026-09-14T08:25:29Z] === schedule_pending exit 0 ===

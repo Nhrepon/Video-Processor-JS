@@ -1,4 +1,4 @@
-const { splitVideo } = require("./utility/splitVideo");
+const { splitVideo } = require("../utility/splitVideo");
 const path = require("path");
 const fs = require("fs");
 

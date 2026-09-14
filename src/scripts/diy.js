@@ -16,20 +16,20 @@ const {
   escapeDrawtext,
   getMediaMetadata,
   trimVideo,
-} = require("./utility/utility");
+} = require("../utility/utility");
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
 const inputDir = path.join(__dirname, "input");
 const outputDir = path.join(__dirname, "output");
-const introDir = path.join(__dirname, "intro/sports");
+const introDir = path.join(__dirname, "intro/diy");
 const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
 const partDir = path.join(__dirname, "output/parts");
 
-const PART_MINUTES = 3;
+const PART_MINUTES = 9;
 const TRIM_START_SECONDS = 20;
-const TRIM_END_SECONDS = 15;
+const TRIM_END_SECONDS = 10;
 
 async function run() {
   const inputFiles = fs
@@ -164,10 +164,12 @@ async function splitVideo({
 
 function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const SPEED_FACTOR = 1.06;
-  const OUTPUT_WIDTH = 1080; // 1440
-  const OUTPUT_HEIGHT = 1440;
+  const OUTPUT_WIDTH = 1440; // 1440
+  const OUTPUT_HEIGHT = 1080;
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
   const HALF_HEIGHT = Math.floor(OUTPUT_HEIGHT / 2);
+  const SCALED_WIDTH = OUTPUT_WIDTH;
+  const SCALED_HEIGHT = OUTPUT_HEIGHT;
   const OUTPUT_FPS = 30;
   const X264_PRESET = "fast";
   const CRF = "24";
@@ -178,13 +180,13 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const BLUR_STRENGTH = 5;
   const VOICE_PITCH = 0.96;
   const ORIGINAL_AUDIO_VOLUME = 1.0;
-  const BED_AUDIO_VOLUME = 0.21;
+  const BED_AUDIO_VOLUME = 0.30;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
   const showTopText = false;
   const showBottomText = true;
   const showIntro = false;
-  const hueShift = 0.28;
+  const hueShift = 0.48;
 
   let fileName = path.basename(videoPath); // adjust if you run from repo root
   const fileExt = path.extname(fileName);
@@ -232,10 +234,10 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     fs.mkdirSync(inputDir, { recursive: true });
 
     const inputVideo = videoPath;
-    const introVideoList = fs.readdirSync(introDir);
-    const introVideoPath = introVideoList.map((file) => path.join(introDir, file))[getRandomNumber(0, introVideoList.length - 1)];
-    const introVideo = await trimVideo(introVideoPath, 0, 10, partDir);
-    console.log(`Intro video: ${introVideo}`);
+    const introVideoList = showIntro ? fs.readdirSync(introDir) : [];
+    const introVideoPath = showIntro ? introVideoList.map((file) => path.join(introDir, file))[getRandomNumber(0, introVideoList.length - 1)] : null;
+    const introVideo = showIntro ? await trimVideo(introVideoPath, 0, 10, partDir) : null;
+
     const audioFiles = getAudioFiles(audioDir);
     if (audioFiles.length === 0) {
       throw new Error("No extra audio files found in audio directory");
@@ -256,7 +258,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
     if (!fs.existsSync(inputVideo))
       throw new Error(`input video not found at ${inputVideo}`);
-    if (!fs.existsSync(introVideo))
+    if (showIntro && !fs.existsSync(introVideo))
       throw new Error(`intro video not found at ${introVideo}`);
     if (!fs.existsSync(extraAudio))
       throw new Error(`extra audio not found at ${extraAudio}`);
@@ -337,7 +339,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[mainbg]`,
     );
     fc.push(
-      `[mainB]hflip,scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT-360}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT-360}:(iw-ow)/2:(ih-oh)/2,${gradeFilter}[mainfg]`, // `[mainB]hflip,scale=${OUTPUT_SIZE - 180}:${OUTPUT_SIZE - 180}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
+      `[mainB]hflip,scale=${SCALED_WIDTH}:${SCALED_HEIGHT}:force_original_aspect_ratio=increase,crop=${SCALED_WIDTH}:${SCALED_HEIGHT}:(iw-ow)/2:(ih-oh)/2,${gradeFilter}[mainfg]`, // `[mainB]hflip,scale=${OUTPUT_SIZE - 180}:${OUTPUT_SIZE - 180}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
     );
     fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
 
@@ -387,7 +389,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     // Audio
     if (hasAudio) {
       fc.push(
-        `[${mainIdx}:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
+        `[${mainIdx}:a]asetrate=44100*${VOICE_PITCH},aresample=44100,afftdn,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
       );
     }
 
@@ -453,9 +455,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-map_metadata",
       "-1",
       "-metadata",
-      `title=${fileBaseName} | sports short video`,
+      `title=${fileBaseName} | short video`,
       "-metadata",
-      "description=Sports video, FIFA World Cup, short video ",
+      "description=Short video clip featuring cinematic scenes, cartoon animations, or video game moments curated for social media and short-form content.",
       "-metadata",
       "comment=Produced by NHRepon",
       "-metadata",
@@ -473,21 +475,25 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "-metadata",
       "composer=NHRepon",
       "-metadata",
-      "album=Sports Video Collection",
+      "album=Movie Clip & Animation Collection",
       "-metadata",
       "track=1",
       "-metadata",
       "network=NHRepon",
       "-metadata",
-      "synopsis=Sports video clip created for social sharing and short-form video publishing.",
+      "synopsis=Cinematic movie clip, cartoon animation, or video game scene created for social sharing and short-form video publishing.",
       "-metadata",
       `keywords=${[
-        "sports clip",
-        "FIFA World Cup",
+        "movie clip",
+        "film scene",
+        "cinematic",
         "viral clip",
         "short video",
         "entertainment",
-        "sports highlights",
+        "movie highlights",
+        "animation clip",
+        "cartoon clip",
+        "tom and jerry clip",
         "nhrepon",
       ].join(",")}`,
       "-metadata",

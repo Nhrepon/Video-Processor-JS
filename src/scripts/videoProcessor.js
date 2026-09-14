@@ -16,20 +16,20 @@ const {
   escapeDrawtext,
   getMediaMetadata,
   trimVideo,
-} = require("./utility/utility");
+} = require("../utility/utility");
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
 const inputDir = path.join(__dirname, "input");
 const outputDir = path.join(__dirname, "output");
-const introDir = path.join(__dirname, "intro/diy");
+const introDir = path.join(__dirname, "intro/cartoon");
 const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
 const partDir = path.join(__dirname, "output/parts");
 
-const PART_MINUTES = 9;
+const PART_MINUTES = 3;
 const TRIM_START_SECONDS = 20;
-const TRIM_END_SECONDS = 10;
+const TRIM_END_SECONDS = 15;
 
 async function run() {
   const inputFiles = fs
@@ -55,7 +55,7 @@ async function run() {
         outputDir,
         introDir,
         assetsDir,
-        audioDir
+        audioDir,
       );
     }
 
@@ -78,10 +78,7 @@ async function splitVideo({
       ffmpeg(inputVideo)
         .setStartTime(startSeconds)
         .duration(durationSeconds)
-        .outputOptions([
-          "-c",
-          "copy",
-        ])
+        .outputOptions(["-c", "copy"])
         .output(outputPath)
         .on("end", resolve)
         .on("error", reject)
@@ -164,12 +161,10 @@ async function splitVideo({
 
 function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const SPEED_FACTOR = 1.06;
-  const OUTPUT_WIDTH = 1440; // 1440
-  const OUTPUT_HEIGHT = 1080;
+  const OUTPUT_WIDTH = 1080; // 1440
+  const OUTPUT_HEIGHT = 1440;
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
   const HALF_HEIGHT = Math.floor(OUTPUT_HEIGHT / 2);
-  const SCALED_WIDTH = OUTPUT_WIDTH;
-  const SCALED_HEIGHT = OUTPUT_HEIGHT;
   const OUTPUT_FPS = 30;
   const X264_PRESET = "fast";
   const CRF = "24";
@@ -180,12 +175,12 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const BLUR_STRENGTH = 5;
   const VOICE_PITCH = 0.96;
   const ORIGINAL_AUDIO_VOLUME = 1.0;
-  const BED_AUDIO_VOLUME = 0.30;
+  const BED_AUDIO_VOLUME = 0.11;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
   const showTopText = false;
   const showBottomText = true;
-  const showIntro = false;
+  const showIntro = true;
   const hueShift = 0.48;
 
   let fileName = path.basename(videoPath); // adjust if you run from repo root
@@ -234,10 +229,12 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     fs.mkdirSync(inputDir, { recursive: true });
 
     const inputVideo = videoPath;
-    const introVideoList = showIntro ? fs.readdirSync(introDir) : [];
-    const introVideoPath = showIntro ? introVideoList.map((file) => path.join(introDir, file))[getRandomNumber(0, introVideoList.length - 1)] : null;
-    const introVideo = showIntro ? await trimVideo(introVideoPath, 0, 10, partDir) : null;
-
+    const introVideoList = fs.readdirSync(introDir);
+    const introVideoPath = introVideoList.map((file) =>
+      path.join(introDir, file),
+    )[getRandomNumber(0, introVideoList.length - 1)];
+    const introVideo = await trimVideo(introVideoPath, 0, 10, partDir);
+    console.log(`Intro video: ${introVideo}`);
     const audioFiles = getAudioFiles(audioDir);
     if (audioFiles.length === 0) {
       throw new Error("No extra audio files found in audio directory");
@@ -258,7 +255,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
     if (!fs.existsSync(inputVideo))
       throw new Error(`input video not found at ${inputVideo}`);
-    if (showIntro && !fs.existsSync(introVideo))
+    if (!fs.existsSync(introVideo))
       throw new Error(`intro video not found at ${introVideo}`);
     if (!fs.existsSync(extraAudio))
       throw new Error(`extra audio not found at ${extraAudio}`);
@@ -269,7 +266,8 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         "No overlay asset found. Add own-footage.* or own-image.* to assets/",
       );
 
-    const { duration: mainOrigDur, hasAudio } = await getMediaMetadata(inputVideo);
+    const { duration: mainOrigDur, hasAudio } =
+      await getMediaMetadata(inputVideo);
 
     const mainDuration = mainOrigDur / SPEED_FACTOR;
     const introDuration = showIntro ? await getMediaDuration(introVideo) : 0;
@@ -339,7 +337,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[mainbg]`,
     );
     fc.push(
-      `[mainB]hflip,scale=${SCALED_WIDTH}:${SCALED_HEIGHT}:force_original_aspect_ratio=increase,crop=${SCALED_WIDTH}:${SCALED_HEIGHT}:(iw-ow)/2:(ih-oh)/2,${gradeFilter}[mainfg]`, // `[mainB]hflip,scale=${OUTPUT_SIZE - 180}:${OUTPUT_SIZE - 180}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
+      `[mainB]hflip,scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:(iw-ow)/2:(ih-oh)/2,${gradeFilter}[mainfg]`, // `[mainB]hflip,scale=${OUTPUT_SIZE - 180}:${OUTPUT_SIZE - 180}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
     );
     fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
 
@@ -351,12 +349,12 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
 
       // Scale overlay input and apply opacity
       fc.push(
-        `[${overallInputIndex}:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY}${overlayLabel}`
+        `[${overallInputIndex}:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY}${overlayLabel}`,
       );
 
       const outLabel = `[mlayer${idx}]`;
       fc.push(
-        `${currentMainLabel}${overlayLabel}overlay=0:0:enable='between(t,${ov.start},${ov.end})'${outLabel}`
+        `${currentMainLabel}${overlayLabel}overlay=0:0:enable='between(t,${ov.start},${ov.end})'${outLabel}`,
       );
       currentMainLabel = outLabel;
     });
@@ -389,7 +387,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     // Audio
     if (hasAudio) {
       fc.push(
-        `[${mainIdx}:a]asetrate=44100*${VOICE_PITCH},aresample=44100,afftdn,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
+        `[${mainIdx}:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
       );
     }
 
@@ -414,7 +412,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     // Ensure final video matches full duration
     fc.push(`[${hasLogo ? "mainvwithlogo" : "mainv"}]setpts=PTS[finalv]`);
     fc.push(`[finalv]trim=duration=${totalDuration}[finalv_trim]`);
-    
+
     // Concat intro if enabled
     if (showIntro) {
       fc.push(

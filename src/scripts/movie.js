@@ -1,35 +1,50 @@
+/**
+ * Optimized video processor
+ * - Faster x264 preset (fast), CRF 24, threads=0
+ * - Uses ffprobe installer
+ * - Limits image input duration (-t) to avoid infinite loops
+ * - Applies blur at half resolution to reduce cost
+ * - Pre-scales overlays in-filter once
+ * - Safe atempo chaining for SPEED_FACTOR outside 0.5-2.0
+ * - Streamed SHA256 hashing (avoids reading whole file into memory)
+ *
+ * Save as src/videoprocessor.js and run with: node src/videoprocessor.js
+ */
+
 const ffmpeg = require("fluent-ffmpeg");
-const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
-const ffprobePath = require("@ffprobe-installer/ffprobe").path;
 const fs = require("fs");
 const path = require("path");
+
+let ffmpegPath = "F:\\ffmpeg\\bin\\ffmpeg.exe";
+let ffprobePath = "F:\\ffmpeg\\bin\\ffprobe.exe";
+
 const {
   getRandomNumber,
   getAudioFiles,
-  removeFile,
-  getDuration,
-  buildOverlayPlan,
-  addInput,
-  getMediaDuration,
-  atempoFilters,
   fileSha256Hex,
+  timemarkToSeconds,
+  getDuration,
+  removeFile,
+  atempoFilters,
   escapeDrawtext,
-  getMediaMetadata,
-  trimVideo,
-} = require("./utility/utility");
+  addInput,
+  buildOverlayPlan,
+  getMediaDuration,
+  getMediaMetadata
+} = require("../utility/utility");
+
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
 const inputDir = path.join(__dirname, "input");
 const outputDir = path.join(__dirname, "output");
-const introDir = path.join(__dirname, "intro/cartoon");
 const assetsDir = path.join(__dirname, "assets");
 const audioDir = path.join(__dirname, "audio");
+const voiceOverDir = path.join(__dirname, "audio/voiceOver");
 const partDir = path.join(__dirname, "output/parts");
-
-const PART_MINUTES = 3;
-const TRIM_START_SECONDS = 20;
-const TRIM_END_SECONDS = 15;
+const PART_MINUTES = 9;
+const TRIM_START_SECONDS = 70;
+const TRIM_END_SECONDS = 50;
 
 async function run() {
   const inputFiles = fs
@@ -46,16 +61,16 @@ async function run() {
         inputVideo,
         processDir: partDir,
         partMinutes: PART_MINUTES,
-        trimStart: TRIM_START_SECONDS,
+        trimStart: duration > 1200 ? TRIM_START_SECONDS : 0,
         trimEnd: TRIM_END_SECONDS,
       });
     } else {
       await videoProcessor(
         inputVideo,
         outputDir,
-        introDir,
         assetsDir,
         audioDir,
+        voiceOverDir,
       );
     }
 
@@ -70,6 +85,7 @@ async function splitVideo({
   trimStart = 0,
   trimEnd = 0,
 }) {
+  fs.mkdirSync(processDir, { recursive: true });
   const seconds = partMinutes * 60;
   const MIN_PART_DURATION_SECONDS = 5;
 
@@ -78,7 +94,20 @@ async function splitVideo({
       ffmpeg(inputVideo)
         .setStartTime(startSeconds)
         .duration(durationSeconds)
-        .outputOptions(["-c", "copy"])
+        .outputOptions([
+          "-c:v",
+          "libx264",
+          "-preset",
+          "fast",
+          "-crf",
+          "23",
+          "-c:a",
+          "aac",
+          "-b:a",
+          "192k",
+          "-movflags",
+          "+faststart",
+        ])
         .output(outputPath)
         .on("end", resolve)
         .on("error", reject)
@@ -88,7 +117,6 @@ async function splitVideo({
 
   // Apply trimming to total duration
   const trimmedDuration = totalDuration - trimStart - trimEnd;
-
   if (trimmedDuration < MIN_PART_DURATION_SECONDS) {
     console.log(
       `Video is too short after trimming: ${trimmedDuration} seconds`,
@@ -100,16 +128,14 @@ async function splitVideo({
   const baseName = path.basename(inputVideo, ext);
   const processedFiles = [];
 
-  let startSeconds = trimStart;
+  let startSeconds = trimStart; // Start from trim position
   let partIndex = 0;
 
   while (startSeconds < totalDuration - trimEnd) {
     partIndex++;
     let partSeconds = getRandomNumber(seconds, seconds + 50);
-    const durationSeconds = Math.min(
-      partSeconds,
-      totalDuration - trimEnd - startSeconds,
-    );
+    const maxDuration = totalDuration - trimEnd - startSeconds;
+    const durationSeconds = Math.min(partSeconds, maxDuration);
 
     console.log(
       `Part ${partIndex}: ${durationSeconds}s (random: ${partSeconds}s)`,
@@ -131,15 +157,15 @@ async function splitVideo({
     });
 
     console.log(
-      `Processing: ${partIndex} out of ${Math.ceil(totalDuration / seconds)}`,
+      `Processing: ${partIndex} our of ${Math.ceil(trimmedDuration / seconds)}`,
     );
 
     const processedOutput = await videoProcessor(
       splitPartPath,
       outputDir,
-      introDir,
       assetsDir,
       audioDir,
+      voiceOverDir,
     );
 
     processedFiles.push({
@@ -159,10 +185,16 @@ async function splitVideo({
   return processedFiles;
 }
 
-function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
+function videoProcessor(
+  videoPath,
+  outputDir,
+  assetsDir,
+  audioDir,
+  voiceOverDir,
+) {
   const SPEED_FACTOR = 1.06;
-  const OUTPUT_WIDTH = 1080; // 1440
-  const OUTPUT_HEIGHT = 1440;
+  const OUTPUT_WIDTH = 1440;
+  const OUTPUT_HEIGHT = 1080;
   const HALF_WIDTH = Math.floor(OUTPUT_WIDTH / 2);
   const HALF_HEIGHT = Math.floor(OUTPUT_HEIGHT / 2);
   const OUTPUT_FPS = 30;
@@ -173,14 +205,16 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
   const OVERLAY_MIN_GAP = 8;
   const OVERLAY_MAX_GAP = 20;
   const BLUR_STRENGTH = 5;
-  const VOICE_PITCH = 0.96;
+  const VOICE_PITCH = 0.88;
   const ORIGINAL_AUDIO_VOLUME = 1.0;
-  const BED_AUDIO_VOLUME = 0.11;
+  const BED_AUDIO_VOLUME = 0.22;
+  const VOICEOVER_VOLUME = 0.2;
   const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
   const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
-  const showTopText = false;
+
+  const brandText = escapeDrawtext("Nhrepon.com");
   const showBottomText = true;
-  const showIntro = true;
+  const showVoiceover = true;
   const hueShift = 0.48;
 
   let fileName = path.basename(videoPath); // adjust if you run from repo root
@@ -191,14 +225,6 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     .replace(/\\/g, "\\\\")
     .replace(/:/g, "\\:");
   const logoPath = assetPath("logo.png");
-
-  function timemarkToSeconds(timemark) {
-    if (!timemark) return null;
-    const parts = timemark.split(":").map(Number);
-    if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n)))
-      return null;
-    return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  }
 
   function getOverlayAssets() {
     if (!fs.existsSync(assetsDir)) return [];
@@ -227,22 +253,24 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     fs.mkdirSync(assetsDir, { recursive: true });
     fs.mkdirSync(outputDir, { recursive: true });
     fs.mkdirSync(inputDir, { recursive: true });
+    fs.mkdirSync(voiceOverDir, { recursive: true });
 
     const inputVideo = videoPath;
-    const introVideoList = fs.readdirSync(introDir);
-    const introVideoPath = introVideoList.map((file) =>
-      path.join(introDir, file),
-    )[getRandomNumber(0, introVideoList.length - 1)];
-    const introVideo = await trimVideo(introVideoPath, 0, 10, partDir);
-    console.log(`Intro video: ${introVideo}`);
     const audioFiles = getAudioFiles(audioDir);
     if (audioFiles.length === 0) {
-      throw new Error("No extra audio files found in audio directory");
+      throw new Error(`No audio files found in ${audioDir}`);
     }
-    const extraAudio =
-      audioFiles.length > 0
-        ? audioFiles[getRandomNumber(0, audioFiles.length - 1)]
+    const extraAudio = audioFiles[getRandomNumber(0, audioFiles.length - 1)];
+    const voiceFiles = getAudioFiles(voiceOverDir);
+    const voiceOver =
+      voiceFiles.length > 0
+        ? voiceFiles[getRandomNumber(0, voiceFiles.length - 1)]
         : null;
+    if (voiceOver) {
+      console.log(`Voiceover: ${path.basename(voiceOver)}`);
+    } else {
+      console.warn(`No voiceover files in ${voiceOverDir}`);
+    }
     const randomId = Math.floor(Math.random() * 999) + 1;
     const outputFileName =
       `${fileBaseName}`
@@ -251,14 +279,14 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         .replace(/[^a-zA-Z0-9-]/g, "-")
         .replace(/-+/g, "-")
         .toLowerCase() + `-${randomId}-by-nhrepon.mp4`;
+
     const outputVideo = path.join(outputDir, outputFileName);
 
     if (!fs.existsSync(inputVideo))
-      throw new Error(`input video not found at ${inputVideo}`);
-    if (!fs.existsSync(introVideo))
-      throw new Error(`intro video not found at ${introVideo}`);
-    if (!fs.existsSync(extraAudio))
-      throw new Error(`extra audio not found at ${extraAudio}`);
+      throw new Error(`input.mp4 not found at ${inputVideo}`);
+    if (!extraAudio || !fs.existsSync(extraAudio)) {
+      throw new Error(`audio not found at ${extraAudio}`);
+    }
 
     const overlayAssets = getOverlayAssets();
     if (overlayAssets.length === 0)
@@ -266,12 +294,9 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         "No overlay asset found. Add own-footage.* or own-image.* to assets/",
       );
 
-    const { duration: mainOrigDur, hasAudio } =
-      await getMediaMetadata(inputVideo);
+    const { duration: mainOrigDur, hasAudio } = await getMediaMetadata(inputVideo);
 
     const mainDuration = mainOrigDur / SPEED_FACTOR;
-    const introDuration = showIntro ? await getMediaDuration(introVideo) : 0;
-    const totalDuration = mainDuration + introDuration;
     const overlays = buildOverlayPlan(
       mainDuration,
       overlayAssets.length,
@@ -280,7 +305,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       OVERLAY_MAX_GAP,
     );
 
-    console.log(`Original video duration: ${mainOrigDur.toFixed(2)}s`);
+    console.log(`Video duration: ${mainOrigDur.toFixed(2)}s`);
     console.log(`Using ${overlayAssets.length} overlay asset(s)`);
     console.log(`Inserting ${overlays.length} random overlay segment(s)`);
 
@@ -291,19 +316,19 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         label: "main",
       },
       { path: extraAudio, type: "audio", label: "audio" },
-      ...overlayAssets.map((a, i) => ({
-        path: a.path,
-        type: a.type,
-        name: a.name,
-        label: `overlay_${i}`,
-      })),
     ];
+    if (voiceOver && showVoiceover) {
+      inputs.push({ path: voiceOver, type: "audio", label: "voiceover" });
+    }
+    inputs.push(
+      ...overlayAssets.map((a, i) => ({
+        ...a,
+        label: a.label || `overlay_${i}`,
+      })),
+    );
     const hasLogo = fs.existsSync(logoPath);
     if (hasLogo) {
       inputs.push({ path: logoPath, type: "image", label: "logo" });
-    }
-    if (showIntro) {
-      inputs.push({ path: introVideo, type: "video", label: "intro" });
     }
 
     const inputIndex = (label) => {
@@ -311,13 +336,8 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       if (index < 0) throw new Error(`Missing ffmpeg input: ${label}`);
       return index;
     };
-
-    const mainIdx = inputIndex("main");
-    const audioIdx = inputIndex("audio");
-    const logoIdx = hasLogo ? inputIndex("logo") : -1;
-    const introIdx = showIntro ? inputIndex("intro") : -1;
-    const overlayBaseIdx = inputIndex("overlay_0");
-
+    const overlayBaseIdx =
+      voiceOver && showVoiceover ? inputIndex("voiceover") + 1 : 2;
     // Debug: Log input order
     console.log("Input order:");
     inputs.forEach((inp, idx) => {
@@ -328,30 +348,29 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
     inputs.forEach((inp) => addInput(command, inp, OVERLAY_DURATION));
 
     const fc = [];
-    // const gradeFilter = "hue=s=0.58,eq=contrast=1.04:brightness=0.01";
-    const gradeFilter = `hue=s=${hueShift},eq=contrast=1.05:brightness=0.01:saturation=1.11,unsharp=7:7:1.5:5:5:0.8,eq=brightness=0.01:contrast=1.05:gamma=1.05`;
+    // const gradeFilter = `hue=s=${hueShift},eq=contrast=1.04:brightness=0.01`;
+    const gradeFilter = `hue=s=${hueShift},eq=contrast=1.12:brightness=0.02:gamma=1.05:saturation=1.15,unsharp=7:7:1.5:5:5:0.8,eq=brightness=0.02:contrast=1.05:gamma=1.05`;
+
+    fc.push(`[0:v]split=2[mainA][mainB]`);
 
     // Main: apply blur on half-res background, foreground at full res
-    fc.push(`[0:v]setpts=PTS/${SPEED_FACTOR},split=2[mainA][mainB]`);
     fc.push(
       `[mainA]scale=${HALF_WIDTH}:${HALF_HEIGHT}:force_original_aspect_ratio=increase,crop=${HALF_WIDTH}:${HALF_HEIGHT},boxblur=${BLUR_STRENGTH},scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},${gradeFilter}[mainbg]`,
     );
     fc.push(
-      `[mainB]hflip,scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:(iw-ow)/2:(ih-oh)/2,${gradeFilter}[mainfg]`, // `[mainB]hflip,scale=${OUTPUT_SIZE - 180}:${OUTPUT_SIZE - 180}:force_original_aspect_ratio=increase,${gradeFilter}[mainfg]`,
+      `[mainB]hflip,tmix=frames=3:weights='0.18|0.35|0.47',scale=${OUTPUT_WIDTH}*1.5:${OUTPUT_HEIGHT}*1.5:force_original_aspect_ratio=increase,zoompan=z='1.03+0.02*sin(2*PI*in/250)':x='(iw-ow)/2':y='(ih-oh)/2':d=1:fps=${OUTPUT_FPS}:s=${OUTPUT_WIDTH}x${OUTPUT_HEIGHT},${gradeFilter}[mainfg]`,
     );
-    fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase]`);
 
+    fc.push(`[mainbg][mainfg]overlay=(W-w)/2:(H-h)/2[mainbase_orig]`);
+    fc.push(`[mainbase_orig]setpts=PTS/${SPEED_FACTOR}[mainbase]`);
     let currentMainLabel = "[mainbase]";
-
     overlays.forEach((ov, idx) => {
       const overallInputIndex = overlayBaseIdx + ov.assetIndex;
       const overlayLabel = `[ov${idx}]`;
-
-      // Scale overlay input and apply opacity
+      // scaled once; for image we already looped with -t but treat same in filter
       fc.push(
         `[${overallInputIndex}:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},format=rgba,colorchannelmixer=aa=${OVERLAY_OPACITY}${overlayLabel}`,
       );
-
       const outLabel = `[mlayer${idx}]`;
       fc.push(
         `${currentMainLabel}${overlayLabel}overlay=0:0:enable='between(t,${ov.start},${ov.end})'${outLabel}`,
@@ -359,71 +378,80 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       currentMainLabel = outLabel;
     });
 
-    const brandText = escapeDrawtext("Nhrepon.com");
-    if (showTopText) {
-      fc.push(
-        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=42:borderw=3:bordercolor=black:x=40:y=20:fix_bounds=true:enable='gte(t,0)'[maintoptext]`, //box=1:boxcolor=black@0.55:boxborderw=18:
-      );
-    }
-
     if (showBottomText) {
       fc.push(
-        `${showTopText ? "[maintoptext]" : currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
+        `${currentMainLabel}drawtext=text='${brandText}':fontfile='${drawtextFont}':fontcolor=white:fontsize=48:borderw=2:bordercolor=black:x=(w-text_w)/2:y=h-text_h-10:fix_bounds=true:enable='gte(t,0)',setsar=1[mainv]`,
       );
     }
+
+    let finalVideoLabel = "[mainv]";
     // logo
     if (hasLogo) {
-      fc.push(`[${logoIdx}:v]scale=${140}:-1,format=rgba[mainlogo]`);
+      const logoInputIndex = inputIndex("logo");
+      fc.push(`[${logoInputIndex}:v]scale=${140}:-1,format=rgba[mainlogo]`);
       fc.push(`[mainv][mainlogo]overlay=W-w-10:10[mainvwithlogo]`);
+      finalVideoLabel = "[mainvwithlogo]";
     }
 
-    // Scale intro to full output video size and trim to max 10s.
-    if (showIntro) {
-      fc.push(
-        `[${introIdx}:v]trim=duration=${introDuration},setpts=PTS-STARTPTS,scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:(iw-ow)/2:(ih-oh)/2,setsar=1[introv]`,
-      );
-    }
+    // Generate random modifiers for each video
+    const mainOrigVolume =
+      voiceOver && showVoiceover ? "1.2" : ORIGINAL_AUDIO_VOLUME;
 
-    // Audio
+    let finalAudioLabel;
+
     if (hasAudio) {
+      // Original movie audio (speed-matched to main clip and resampled to 44100 Hz at the end)
       fc.push(
-        `[${mainIdx}:a]asetrate=44100*${VOICE_PITCH},aresample=44100,${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${ORIGINAL_AUDIO_VOLUME}[mainorig]`,
+        `[0:a]aresample=44100,asetrate=44100*${VOICE_PITCH},${atempoFilters(SPEED_FACTOR / VOICE_PITCH)},volume=${mainOrigVolume},aresample=44100[mainorig]`,
       );
+
+      // Bed music: stream_loop on input
+      fc.push(`[1:a]atempo=1,volume=${BED_AUDIO_VOLUME}[mainbed]`);
+
+      if (voiceOver && showVoiceover) {
+        const voiceOverInputIndex = inputIndex("voiceover");
+        fc.push(
+          `[${voiceOverInputIndex}:a]atempo=1,afftdn=nr=25:nf=-45:tn=1,volume=${VOICEOVER_VOLUME}[voiceovermix]`,
+        );
+        fc.push(
+          `[mainorig][mainbed][voiceovermix]amix=inputs=3:duration=longest:dropout_transition=2[mixeda]`,
+        );
+      } else {
+        fc.push(
+          `[mainorig][mainbed]amix=inputs=2:duration=longest:dropout_transition=2[mixeda]`,
+        );
+      }
+      finalAudioLabel = "[mixeda]";
+    } else {
+      // Silent input video: only mix bed music and optional voiceover
+      fc.push(`[1:a]atempo=1,volume=${BED_AUDIO_VOLUME}[mainbed]`);
+
+      if (voiceOver && showVoiceover) {
+        const voiceOverInputIndex = inputIndex("voiceover");
+        fc.push(
+          `[${voiceOverInputIndex}:a]atempo=1,afftdn=nr=25:nf=-45:tn=1,volume=${VOICEOVER_VOLUME}[voiceovermix]`,
+        );
+        fc.push(
+          `[mainbed][voiceovermix]amix=inputs=2:duration=longest:dropout_transition=2[mixeda]`,
+        );
+      } else {
+        fc.push(`[mainbed]anull[mixeda]`);
+      }
+      finalAudioLabel = "[mixeda]";
     }
 
-    if (showIntro) {
-      fc.push(`[${introIdx}:a]volume=0.3[introa]`);
-      fc.push(`[${audioIdx}:a]${atempoFilters(SPEED_FACTOR)}[extraamain]`);
-    } else {
-      fc.push(`[${audioIdx}:a]${atempoFilters(SPEED_FACTOR)}[extraamain]`);
-    }
+    // Trim the mixed audio stream to match the video duration exactly to prevent desync / trailing playback
     fc.push(
-      `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
+      `${finalAudioLabel}atrim=end=${mainDuration.toFixed(3)},asetpts=PTS-STARTPTS[finala]`,
     );
-    if (hasAudio) {
-      fc.push(
-        `[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`,
-      );
-    } else {
-      fc.push(`[mainbed]anull[maina]`);
-    }
-    fc.push(`[maina]atrim=duration=${totalDuration.toFixed(3)}[finala]`);
 
-    // Ensure final video matches full duration
-    fc.push(`[${hasLogo ? "mainvwithlogo" : "mainv"}]setpts=PTS[finalv]`);
-    fc.push(`[finalv]trim=duration=${totalDuration}[finalv_trim]`);
-
-    // Concat intro if enabled
-    if (showIntro) {
-      fc.push(
-        `[introv][introa][finalv_trim][finala]concat=n=2:v=1:a=1[outv][outa]`,
-        // `[finalv_trim][finala][introv][introa]concat=n=2:v=1:a=1[outv][outa]`,
-      );
-    } else {
-      fc.push(`[finalv_trim]null[outv]`);
-      fc.push(`[finala]anull[outa]`);
-    }
-
+    // Periodic removal filter: drop 1s every 10s
+    fc.push(`${finalVideoLabel}select='if(gte(mod(t,10),1),1,0)',setpts=N/FRAME_RATE/TB[filteredv]`);
+    // Trim video to match main duration
+    fc.push(`[filteredv]trim=end=${mainDuration.toFixed(3)},setpts=PTS-STARTPTS[finalv]`);
+    fc.push(`[finalv]null[outv]`);
+    fc.push(`[finala]anull[outa]`);
+    
     const filterComplex = fc.join(";");
 
     let lastLoggedPercent = -1;
@@ -452,6 +480,7 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       "+faststart",
       "-map_metadata",
       "-1",
+      "-shortest",
       "-metadata",
       `title=${fileBaseName} | short video`,
       "-metadata",
@@ -498,7 +527,6 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
       `date=${new Date().toISOString().slice(0, 10)}`,
       "-metadata",
       "copyright=NHRepon",
-      "-shortest",
     ];
 
     return new Promise((resolve, reject) => {
@@ -509,14 +537,14 @@ function videoProcessor(videoPath, outputDir, introDir, assetsDir, audioDir) {
         .on("start", (cmdline) => console.log("FFmpeg started:", cmdline))
         .on("progress", (progress) => {
           const elapsed = timemarkToSeconds(progress.timemark);
-          if (elapsed === null || totalDuration <= 0) return;
-          const safeTotal = Math.max(totalDuration, elapsed, 0.001);
+          if (elapsed === null || mainDuration <= 0) return;
+          const safeTotal = Math.max(mainDuration, elapsed, 0.001);
           const percent = Math.min((elapsed / safeTotal) * 100, 99.4);
           const rounded = Math.floor(percent);
           if (rounded <= lastLoggedPercent) return;
           lastLoggedPercent = rounded;
           console.log(
-            `Progress: ${percent.toFixed(1)}% ✅ ${elapsed.toFixed(1)}s done of ${totalDuration.toFixed(1)}s`,
+            `Progress: ${percent.toFixed(1)}% ✅ ${elapsed.toFixed(1)}s done of ${mainDuration.toFixed(1)}s`,
           );
         })
         .on("end", async () => {

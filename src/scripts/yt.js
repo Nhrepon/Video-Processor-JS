@@ -17,7 +17,7 @@ const {
   getRandomNumber,
   getAudioFiles,
   removeFile,
-} = require("./utility/utility");
+} = require("../utility/utility");
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 
