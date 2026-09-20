@@ -1,0 +1,21 @@
+{
+  "graphVersion": "v23.0",
+  "pageName": "cartoonMornings",
+  "appId": "1550838009637331",
+  "appSecret": "82c4253c3a774c2569ae12eb0515649e",
+  "pageId": "115316646980426",
+  "pageAccessToken": "EAAWCepyrKdMBSfKqfnNFnzc451NHD6RlXKM00eEI3hXmn8Eqc0l7pQ0AE1utgNjFwn7XZBAzc65VSZASjiH8YKFAZBwzzqZCpdKnikqUonSSbdwXHuBzVhnZAl0bSJlzyRPZCZBNbHOqadif6GUpL7WF6SLBsyX5FULMZA6uZBYUqZBPyWKEeKyjuZC0Dh4pb1AdXOZBP2oZD",
+  "caption": "Cartoon Mornings \u2600\ufe0f New cartoon reel! Which character is your favorite? Comment below! \ud83d\udcac\n.\n.\n.\n#cartoonmornings #cartoon #funny #reels #kids #animation #comedy #tomandjerry #classiccartoon #nostalgia #cartoonlovers #fyp #foryoupage #foryou #viral",
+  "reelsDir": "src/autopost/video",
+  "autoPublish": true,
+  "maxPostsPerRun": 1,
+  "copyrightBlocklist": [
+    "disney",
+    "pixar",
+    "marvel",
+    "cartoon network",
+    "warner bros",
+    "nickelodeon"
+  ],
+  "tokenUpdatedAt": "2026-09-13T05:16:52Z"
+}

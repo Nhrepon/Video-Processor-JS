@@ -39,8 +39,8 @@ HEARTBEAT = HERE / "config" / "reelsfb-heartbeat.txt"
 LOG = HERE / "config" / "reelsfb-cron.log"
 PIDFILE = HERE / "config" / "reelsfb-autopost.pid"
 
-GAP_MIN_MIN = 120   # minutes between queued publishes (random 120..180)
-GAP_MAX_MIN = 180
+GAP_MIN_MIN = 720   # minutes between queued publishes (random 12..20h -> ~1.5/day)
+GAP_MAX_MIN = 1200
 FIRST_DELAY_MIN = 60  # first new reel ~1h out when nothing is queued yet
 INTERVAL_HOURS = 3    # --loop mode: how often to look for new reels
 

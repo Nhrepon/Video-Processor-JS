@@ -62,10 +62,80 @@ function captionFromManifest(file) {
   return null;
 }
 
-// Random thumb offset - a mid-clip frame is a stronger CTR hook than frame 0
-// (which is usually a fade-in or plain scene). Falls back to 0 if probe fails.
-function randomThumbOffsetMs() {
-  return Math.floor(Math.random() * 15000) + 2000; // 2s-17s
+// Smart thumbnail selection: pick the frame with the highest YAVG (mean luma)
+// across a few evenly-spaced samples. A bright, high-contrast frame stops the
+// scroll better than a random dark establishing shot.
+// Falls back to a random mid-clip offset if probing fails.
+
+const { spawnSync } = require("child_process");
+const ffprobePath = require("@ffprobe-installer/ffprobe").path;
+
+function getVideoDurationMs(videoPath) {
+  try {
+    const r = spawnSync("ffprobe", [
+      "-v", "quiet",
+      "-print_format", "json",
+      "-show_format",
+      "-show_streams",
+      videoPath,
+    ], { encoding: "utf-8", windowsHide: true });
+    const meta = JSON.parse(r.stdout);
+    return Math.floor(Number(meta?.format?.duration || 0) * 1000);
+  } catch {
+    return 0;
+  }
+}
+
+function pickBestThumbOffsetMs(videoPath) {
+  const durMs = getVideoDurationMs(videoPath);
+  if (durMs <= 5000) return Math.min(2000, Math.floor(durMs / 2));
+
+  // Sample 6 evenly spaced frames across the middle 60% of the video
+  const samples = 6;
+  const startMs = Math.floor(durMs * 0.2);
+  const endMs = Math.floor(durMs * 0.8);
+  const span = endMs - startMs;
+
+  let bestOffset = startMs;
+  let bestScore = -1;
+
+  for (let i = 0; i < samples; i++) {
+    const t = startMs + (span / samples) * i;
+    const tSec = (t / 1000).toFixed(2);
+    try {
+      const r = spawnSync("ffprobe", [
+        "-ss", tSec,
+        "-i", videoPath,
+        "-frames:v", "1",
+        "-vf", "signalstats",
+        "-show_entries", "frame=pict_type",
+        "-of", "csv=p=0",
+        "-f", "null",
+        "-",
+      ], { timeout: 8000, encoding: "utf-8", windowsHide: true });
+
+      // Also get mean luma via signalstats metadata
+      const r2 = spawnSync(ffprobePath, [
+        "-ss", tSec,
+        "-i", videoPath,
+        "-frames:v", "1",
+        "-vf", "signalstats,metadata=print:file=-",
+        "-f", "null",
+        "-",
+      ], { timeout: 8000, encoding: "utf-8", windowsHide: true });
+
+      const m = r2.stdout.match(/YAVG=([0-9.]+)/);
+      const score = m ? Number(m[1]) : 0;
+      if (score > bestScore) {
+        bestScore = score;
+        bestOffset = t;
+      }
+    } catch {
+      // skip this sample
+    }
+  }
+
+  return Math.max(1500, Math.floor(bestOffset));
 }
 
 // ---------------------------------------------------------------- engine
@@ -235,8 +305,8 @@ async function main() {
     if (viralMode) {
       // Peak engagement hours (local). One post per slot, walking forward in
       // time so no two reels compete for the same audience window.
-      // 08:00, 12:30, 18:00, 20:00, 21:00 — morning, midday, prime evening.
-      const PEAK_MINUTES = [8 * 60, 12 * 60 + 30, 18 * 60, 20 * 60, 21 * 60];
+      // 08:00, 12:30, 18:00 — morning, midday, prime evening.
+      const PEAK_MINUTES = [8 * 60, 12 * 60 + 30, 18 * 60];
       const DAY_MS = 24 * 60 * 60 * 1000;
       const nextSlot = (fromMs) => {
         const base = new Date(fromMs);
@@ -311,13 +381,14 @@ async function main() {
       const caption = manifestPick
         ? manifestPick.caption
         : (config.caption || captionForFile(file));
-      const thumbOffsetMs = randomThumbOffsetMs();
+      const videoPath = path.join(reelsDir, file);
+      const thumbOffsetMs = pickBestThumbOffsetMs(videoPath);
       const schedTs = schedule.get(file);
       log(
         `Uploading ${file} (${schedTs ? `SCHEDULED ${new Date(schedTs * 1000).toISOString()}` : published ? "PUBLISHED" : "DRAFT"}) | ${manifestPick ? "manifest-unique" : "pool-variant #" + (CAPTION_POOL.indexOf(caption) + 1)} | thumb @${thumbOffsetMs}ms`,
       );
       const result = await postReel({
-        videoPath: path.join(reelsDir, file),
+        videoPath,
         description: caption,
         published,
         thumbOffsetMs,

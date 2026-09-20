@@ -74,3 +74,58 @@
 [2026-09-14T10:18:11Z] === schedule_pending exit 0 ===
 [2026-09-14T11:05:02Z] 0 pending reels - nothing to do.
 [2026-09-14T14:05:03Z] 0 pending reels - nothing to do.
+[2026-09-15T05:05:03Z] 0 pending reels - nothing to do.
+[2026-09-15T08:05:03Z] 0 pending reels - nothing to do.
+[2026-09-15T11:05:03Z] 0 pending reels - nothing to do.
+[2026-09-15T14:05:04Z] 0 pending reels - nothing to do.
+[2026-09-16T05:05:03Z] 0 pending reels - nothing to do.
+[2026-09-16T08:05:02Z] 0 pending reels - nothing to do.
+[2026-09-16T11:05:02Z] 0 pending reels - nothing to do.
+[2026-09-16T14:05:02Z] 0 pending reels - nothing to do.
+[2026-09-17T05:05:02Z] 0 pending reels - nothing to do.
+[2026-09-17T08:05:02Z] 0 pending reels - nothing to do.
+[2026-09-17T11:05:02Z] 0 pending reels - nothing to do.
+[2026-09-17T14:05:02Z] 0 pending reels - nothing to do.
+[2026-09-19T05:05:03Z] 0 pending reels - nothing to do.
+[2026-09-19T08:05:03Z] 0 pending reels - nothing to do.
+[2026-09-19T11:05:03Z] 0 pending reels - nothing to do.
+[2026-09-20T08:05:03Z] 0 pending reels - nothing to do.
+[2026-09-20T09:16:49Z] === schedule_pending dry=True viral=False === 1 pending reel(s), first publish 2026-09-20T10:16:49+00:00
+[2026-09-20T09:16:49.850Z] Reels 1 total, 1 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T09:16:49.853Z] Mode: SCHEDULED from 2026-09-20T10:16:49.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T09:16:49.854Z] DRY RUN
+[2026-09-20T09:16:49.867Z]   PASS cartoonmornings-Robots-and-Technology-Tom-Jerry-a2-01.mp4 -> 2026-09-20T10:16:49.000Z (20/09/2026, 16:16:49)
+[2026-09-20T09:16:49Z] === schedule_pending exit 0 ===
+[2026-09-20T09:19:24Z] === schedule_pending dry=True viral=True === 3 pending reel(s), first publish 2026-09-20T09:19:24+00:00
+[2026-09-20T09:19:24.590Z] Reels 3 total, 3 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T09:19:24.602Z] Mode: SCHEDULED from 2026-09-20T09:19:24.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T09:19:24.603Z] DRY RUN
+[2026-09-20T09:19:24.616Z]   PASS cartoonmornings-jerry-revenge-arc-b3-ep16.mp4 -> 2026-09-20T12:00:00.000Z (20/09/2026, 18:00:00)
+[2026-09-20T09:19:24.617Z]   PASS cartoonmornings-chase-music-hits-b3-ep15.mp4 -> 2026-09-20T14:00:00.000Z (20/09/2026, 20:00:00)
+[2026-09-20T09:19:24.617Z]   PASS cartoonmornings-tom-tries-again-b3-ep17.mp4 -> 2026-09-20T15:00:00.000Z (20/09/2026, 21:00:00)
+[2026-09-20T09:19:24Z] === schedule_pending exit 0 ===
+[2026-09-20T09:40:08Z] === schedule_pending dry=True viral=True === 3 pending reel(s), first publish 2026-09-20T09:40:08+00:00
+[2026-09-20T09:40:08.819Z] Reels 3 total, 3 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T09:40:08.846Z] Mode: SCHEDULED from 2026-09-20T09:40:08.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T09:40:08.847Z] DRY RUN
+[2026-09-20T09:40:08.862Z]   PASS cartoonmornings-jerry-confidence-b3-ep20.mp4 -> 2026-09-20T12:00:00.000Z (20/09/2026, 18:00:00)
+[2026-09-20T09:40:08.862Z]   PASS cartoonmornings-cartoon-logic-b3-ep19.mp4 -> 2026-09-21T02:00:00.000Z (21/09/2026, 08:00:00)
+[2026-09-20T09:40:08.862Z]   PASS cartoonmornings-pure-chaos-clip-b3-ep18.mp4 -> 2026-09-21T06:30:00.000Z (21/09/2026, 12:30:00)
+[2026-09-20T09:40:08Z] === schedule_pending exit 0 ===
+[2026-09-20T10:01:01Z] === schedule_pending dry=False viral=True === 6 pending reel(s), first publish 2026-09-20T10:01:01+00:00
+[2026-09-20T10:01:01.732Z] Reels 6 total, 6 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T10:01:01.735Z] Mode: SCHEDULED from 2026-09-20T10:01:01.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T10:01:02.813Z] Uploading cartoonmornings-cat-mouse-chaos-b3-ep27.mp4 (SCHEDULED 2026-09-20T12:00:00.000Z) | manifest-unique | thumb @3786ms
+[2026-09-20T10:01:11.194Z] OK cartoonmornings-cat-mouse-chaos-b3-ep27.mp4 -> video_id 1853047635864044 (SCHEDULED)
+[2026-09-20T10:01:11.608Z] Uploading cartoonmornings-jerry-stealth-wins-b3-ep29.mp4 (SCHEDULED 2026-09-21T02:00:00.000Z) | manifest-unique | thumb @6000ms
+[2026-09-20T10:01:18.150Z] OK cartoonmornings-jerry-stealth-wins-b3-ep29.mp4 -> video_id 2004583706923583 (SCHEDULED)
+[2026-09-20T10:01:18.596Z] Uploading cartoonmornings-pettiness-art-b3-ep26.mp4 (SCHEDULED 2026-09-21T06:30:00.000Z) | manifest-unique | thumb @3580ms
+[2026-09-20T10:01:27.514Z] OK cartoonmornings-pettiness-art-b3-ep26.mp4 -> video_id 2159867432077380 (SCHEDULED)
+[2026-09-20T10:01:27.933Z] Uploading cartoonmornings-jerry-main-character-b3-ep25.mp4 (SCHEDULED 2026-09-21T12:00:00.000Z) | manifest-unique | thumb @4400ms
+[2026-09-20T10:01:36.304Z] OK cartoonmornings-jerry-main-character-b3-ep25.mp4 -> video_id 1107062991856795 (SCHEDULED)
+[2026-09-20T10:01:36.709Z] Uploading cartoonmornings-cartoon-physics-b3-ep24.mp4 (SCHEDULED 2026-09-22T02:00:00.000Z) | manifest-unique | thumb @6806ms
+[2026-09-20T10:01:45.657Z] OK cartoonmornings-cartoon-physics-b3-ep24.mp4 -> video_id 2192600231472433 (SCHEDULED)
+[2026-09-20T10:01:46.070Z] Uploading cartoonmornings-ends-friendships-b3-ep28.mp4 (SCHEDULED 2026-09-22T06:30:00.000Z) | manifest-unique | thumb @7600ms
+[2026-09-20T10:01:54.387Z] OK cartoonmornings-ends-friendships-b3-ep28.mp4 -> video_id 2100851683893311 (SCHEDULED)
+[2026-09-20T10:01:54.388Z] Done. uploaded=6 blocked=0 failed=0
+[2026-09-20T10:01:54Z] === schedule_pending exit 0 ===

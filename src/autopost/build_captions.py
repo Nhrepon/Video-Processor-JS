@@ -20,64 +20,84 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent          # src/autopost
 VIDEO_DIR = HERE / "video"
 OUT = HERE / "config" / "captions.json"
-
-# Bump this whenever a NEW batch of source clips is dropped in, so generated
-# filenames never collide with previously-scheduled reels' names.
-BATCH = "b3"
+STATE = HERE / "config" / "reelsfb-state.json"
 
 random.seed(20260914)  # reproducible unique generation
 
 # ---------------------------------------------------------------- word banks
 # Hooks are the first line FB indexes hardest for Reels search; variety +
 # keyword coverage widens the audience surface. Mix of POV / question / list /
-# challenge formats for viral mechanics (comment bait, save bait, watch-till-end).
+# challenge / save-bait / share-bait / nostalgia / open-loop formats.
 HOOKS = [
-    "POV: Jerry just outsmarted Tom AGAIN \U0001f602 tag the friend who always roots for the underdog!",
-    "When the cartoon rivalry never sleeps but the snacks do \U0001f35f who's your MVP - Tom or Jerry?",
-    "Rate this chase 1-10 \U0001f4a5 be honest, how many times have you seen THIS episode?",
-    "Wait for the plot twist at the end \U0001f9f5 you will NOT believe what Jerry does! Watch till the end!",
-    "Nobody: ... Tom at 3AM planning his next move \U0001f914 sound ON for this one \U0001f50a",
-    "Which one are you today - Tom energy or Jerry energy? Be honest \U0001f602",
-    "The most legendary rivalry in cartoon history \U0001f3af who wins this round? Comment your score!",
-    "This is why childhood cartoons hit different \U0001f318 drop a \U0001f499 if you grew up on these!",
-    "Jerry said 'not today' and Tom felt it \U0001f4a2 comment your favorite comeback moment!",
-    "Plot twist nobody saw coming \U0001f92f save this for your bad-day pick-me-up!",
-    "When the prank war escalates to level 100 \U0001f525 tag someone who'd 100% do this!",
-    "Tom: makes a plan. Jerry: laughs in mouse \U0001f439 which side are you on?",
-    "The sneakiness is unreal \U0001f575\ufe0f how did Jerry even get up there?!",
-    "Childhood memory unlocked \U0001f39f\ufe0f who else watched this on repeat as a kid?",
-    "When the background music hits different mid-chase \U0001f3b6 turn it up!",
-    "Jerry's revenge arc is cinema \U0001f3ac nominate the best cartoon duo below!",
-    "Tom tried, Tom failed, Tom will try again \U0001f1f9\U0001f1f3 respect the hustle!",
-    "This clip is 10 seconds of pure chaos \U0001f4a5 share with your chaos buddy!",
-    "When the cartoon logic makes zero sense but you love it anyway \U0001f923",
-    "Jerry's confidence >>> your Monday energy \U0001f4aa send this to someone who needs it!",
-    "The face-off you didn't know you needed \U0001f3a2 who takes round 2?",
-    "Tom's plan: flawless. Execution: disaster \U0001f4c4 comment your funniest fail!",
-    "When the tiny hero wins again \U0001f3c6 prove in the comments Jerry is the GOAT!",
-    "Cartoon physics will never not be funny \U0001f4ab which gag is your all-time fave?",
-    "Jerry really said 'I'm the main character' \U0001f3a7 drop your favorite episode name!",
-    "The rivalry that taught us pettiness is an art \U0001f3a8 who's the bigger menace?",
-    "When Tom forgets he's a cat and Jerry forgets he's a mouse \U0001f9b0 chaos ensues!",
-    "This is the kind of content that ends friendships \U0001f454 tag your rival!",
-    "Jerry's stealth is undefeated \U0001f6e1\ufe0f how many times has Tom fallen for it?",
-    "The comedy timing in this clip is elite \U0001f3c6 name a funnier duo, I'll wait!",
-    "When the chase song lives rent-free in your head \U0001f3b5 tap if you sang it!",
-    "Tom's revenge plan backfired (again) \U0001f4a9 vote: who's funnier, Tom or Jerry?",
-    "Jerry pulled a heist and Tom is STILL confused \U0001f4a0 explain this in the comments!",
-    "When the cartoon beef is more entertaining than real TV \U0001f4fa follow for daily chaos!",
-    "This tiny mouse has more aura than half of Hollywood \U0001f30f say it with a \U0001f525",
-    "The slow-mo defeat face lives in my head rent-free \U0001f92b caption this in 3 words!",
-    "Jerry's winning streak is statistically impossible \U0001f4ca who's counting the W's?",
-    "When the prank is so good even Tom laughs \U0001f604 tag the friend who'd appreciate this!",
-    "The classic duo that never misses \U0001f31f save this for your next bad day!",
-    "Tom built a trap, Jerry built a better one \U0001f528 who's the real engineer?",
-    "When the background sound effect is the real comedian \U0001f3ad drop a \U0001f604",
-    "Jerry's exit strategy deserves an award \U0001f3c6 nominate your cartoon MVP!",
+    # POV format
+    "POV: Jerry just outsmarted Tom AGAIN 😆 tag the friend who always roots for the underdog!",
+    "POV: You're the mouse who always wins 🐭 this is YOUR energy 👑",
+    "POV: You're Tom planning at 3AM 🤯 the plan backfired 😂",
+    "POV: You're Jerry and Tom just set a trap 🪤 watch what happens next 😱",
+    "POV: Monday energy is Jerry energy 💪 send this to someone who needs it!",
+    "POV: You grew up on these cartoons 🥺 this was our childhood 🌙",
+    
+    # Challenge/rate
+    "Rate this chase 1-10 💥 be honest, how many times have you seen THIS episode?",
+    "Who is winning this?! 👀 wait for the end 🔥",
+    "Prank level: 100 💀 Jerry's response: LEGENDARY 👑",
+    "The comedy timing is elite 🏆 rate it 1-10 below 👇",
+    "This clip is pure chaos 💀 and it gets worse 😂",
+    "Name a funnier duo, I'll wait! 🏆 this is peak comedy 👑",
+    
+    # Nostalgia
+    "This was my childhood 🌙 90s kids will remember 🥺",
+    "Childhood memory unlocked 🎟️ who else watched on repeat?",
+    "The rivalry that taught us pettiness is an art 🎨 90s kids raised us 👑",
+    "Grew up on these cartoons? 🥺 save this for nostalgia 🌙",
+    "This is the kind of content that ends friendships 👔 tag your rival!",
+    "When the background music hits different mid-chase 🎶 turn it up!",
+    
+    # Open loop / pattern interrupt
+    "Wait for the plot twist at the end 🤯 you will NOT believe what Jerry does!",
+    "He set a trap for Jerry 🪤 think he got him? 😏",
+    "Tom's face says it all 😤 the confidence though 💀",
+    "Invisible attack 💨 Jerry strikes again 😂",
+    "The plan backfired 🔥 poor Tom 😭",
+    "When the tiny hero wins again 🏆 prove in comments Jerry is the GOAT!",
+    
+    # Save/share bait
+    "Save this for your next bad day 😭 you'll thank me later 👑",
+    "Tag someone who'd appreciate this 😂 they need to see it 🐭",
+    "Send this to your chaos buddy 💀 no chill at 3AM 🕒",
+    "Bookmark for when you need a laugh 😂 trust me on this 👑",
+    "Share with your chaos partner 🐭 this is peak comedy 💀",
+    "Save this for Monday motivation 💪 Jerry's energy is unmatched 👑",
+    
+    # Relatable / meme
+    "Jerry said 'not today' 💪 the AUDACITY though 💀",
+    "tom.exe has stopped working 😤 the nemesis is too powerful 😂",
+    "Jerry's confidence >>> Monday energy 💪 send to someone who needs it!",
+    "When they try so hard 😭 and he still fails 😂",
+    "The sneakiness is unreal 🕵️ how did Jerry even get up there?!",
+    "When the cartoon beef is more entertaining than real TV 📺 follow for daily chaos!",
+    
+    # "The X seconds when..." urgency
+    "The 15 seconds when Tom lost it 😂 watch till the end 🔥",
+    "That one second Tom regrets everything 😤 childhood trauma unlocked 💀",
+    "The second Jerry became legend 👑 nobody expected this 😱",
+    "10 seconds of pure chaos 💥 share with your chaos buddy!",
+    
+    # Comment bait
+    "Which one are you today - Tom energy or Jerry energy? Be honest 😂",
+    "The most legendary rivalry in cartoon history 🎯 who wins this round? Comment your score!",
+    "Jerry really said 'I'm the main character' 🎧 drop your favorite episode name!",
+    "Tom's plan: flawless. Execution: disaster 📄 comment your funniest fail!",
+    "Cartoon physics will never not be funny ✨ which gag is your all-time fave?",
+    "When Tom forgets he's a cat and Jerry forgets he's a mouse 🦰 chaos ensues!",
+    
+    # Follow bait
+    "Follow for daily chaos 🐭 new cartoon reels every day!",
+    "Follow @cartoonmornings for your daily dose of nostalgia 🌙",
 ]
 
 # Each caption ends with a distinct hashtag set (SEO clustering + reach).
-# Six rotating anchor-tag sets keep the brand, the rest vary for keyword spread.
+# Local tags (Bangladesh/India/SEA) for less saturated discovery.
 HASHTAG_SETS = [
     ["#cartoonmornings", "#tomandjerry", "#funnycartoon", "#cartooncomedy", "#classiccartoon", "#nostalgiacartoon", "#funnyreels", "#viralreels", "#fyp", "#foryou"],
     ["#cartoonmornings", "#tomandjerry", "#cartoonrivalry", "#epicchase", "#funnymoments", "#watchtillend", "#cartoonreels", "#trendingreels", "#explorepage", "#viral"],
@@ -85,6 +105,15 @@ HASHTAG_SETS = [
     ["#cartoonmornings", "#tomandjerry", "#retrocartoon", "#90skids", "#oldcartoons", "#goldenera", "#funnyclips", "#reelsfacebook", "#explore", "#foryou"],
     ["#cartoonmornings", "#tomandjerry", "#cartoonmemes", "#relatable", "#memecartoon", "#funnyreels", "#dailyreels", "#cartoonoftheday", "#viral", "#trending"],
     ["#cartoonmornings", "#tomandjerry", "#classics", "#cartoonfunny", "#comedygold", "#funnymatch", "#cartoonfans", "#reels", "#fyp", "#foryoupage"],
+    # Local/SEA discovery tags
+    ["#cartoonmornings", "#tomandjerry", "#bangladesh", "#dhaka", "#90skids", "#funnyreels", "#viralreels", "#fyp", "#foryou", "#desi"],
+    ["#cartoonmornings", "#tomandjerry", "#india", "#90skidsindia", "#oldcartoons", "#funnyclips", "#viral", "#trending", "#fyp", "#foryoupage"],
+    ["#cartoonmornings", "#tomandjerry", "#sea", "#asean", "#nostalgia", "#childhood", "#funnyreels", "#viralreels", "#fyp", "#foryou"],
+    ["#cartoonmornings", "#tomandjerry", "#desi", "#southasia", "#90skids", "#cartoonreels", "#funnyreels", "#viral", "#fyp", "#foryou"],
+    # USA/international tags
+    ["#cartoonmornings", "#tomandjerry", "#usa", "#american", "#funnyreels", "#viralreels", "#fyp", "#foryou", "#cartoonreels", "#trending"],
+    ["#cartoonmornings", "#tomandjerry", "#hollywood", "#classiccartoon", "#oldcartoons", "#funnyclips", "#viral", "#trending", "#fyp", "#foryoupage"],
+    ["#cartoonmornings", "#tomandjerry", "#international", "#worldwide", "#funnyreels", "#viralreels", "#fyp", "#foryou", "#cartoonreels", "#explore"],
 ]
 
 # Short SEO keyword slugs used to build unique file names.
@@ -139,23 +168,62 @@ def build_captions(n):
     return chosen
 
 
+def next_batch_label():
+    """Auto-detect next batch label (b3, b4, b5...) from existing files."""
+    max_b = 2  # start looking from b3
+    for f in VIDEO_DIR.glob("cartoonmornings-*.mp4"):
+        m = re.search(r"-b(\d+)-", f.name)
+        if m:
+            max_b = max(max_b, int(m.group(1)))
+    return f"b{max_b + 1}"
+
+
 def main():
-    files = sorted(
+    # Read existing state so we skip already-posted/skipped reels
+    posted = set()
+    skipped = set()
+    if STATE.exists():
+        try:
+            st = json.loads(STATE.read_text(encoding="utf-8"))
+            posted = set((st.get("posted") or {}).keys())
+            skipped = set((st.get("skipped") or {}).keys())
+        except Exception:
+            pass
+
+    # Read existing manifest so we merge, not overwrite
+    existing_manifest = {}
+    if OUT.exists():
+        try:
+            existing_manifest = json.loads(OUT.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    all_files = sorted(
         f.name for f in VIDEO_DIR.glob("*.mp4")
     )
+
+    # Only process files that are NOT already in state
+    files = [f for f in all_files if f not in posted and f not in skipped]
     n = len(files)
-    print(f"Found {n} videos in {VIDEO_DIR}")
+    print(f"Found {n} new video(s) in {VIDEO_DIR} ({len(all_files) - n} already tracked)")
     if n == 0:
-        raise SystemExit("no videos found")
+        raise SystemExit("no new videos to caption")
 
     captions = build_captions(n)
-    manifest = {}
-    used_names = set()
+    manifest = dict(existing_manifest)  # start with existing
+    used_names = set(manifest.keys())
+    BATCH = next_batch_label()
+    print(f"Batch label: {BATCH}")
+
     for old_name, (title, caption) in zip(files, captions):
-        slug = SLUGS[len(manifest) % len(SLUGS)]
-        # distinct sequential name: cartoonmornings-<slug>-<batch>-epNN.mp4
+        # Use SEO title as filename: strip emoji, normalize, truncate
+        slug = re.sub(r"[^\w\s-]", "", title, flags=re.UNICODE)
+        slug = re.sub(r"[\s]+", "-", slug).strip("-").lower()
+        slug = slug[:60]  # keep it short
+
         ep = len(manifest) + 1
         new_name = f"cartoonmornings-{slug}-{BATCH}-ep{ep:02d}.mp4"
+
         # guarantee filename uniqueness
         while new_name in used_names:
             ep += 1
@@ -170,7 +238,7 @@ def main():
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"Wrote {len(manifest)} captions -> {OUT}")
+    print(f"Wrote {len(manifest)} total captions ({len(manifest) - len(existing_manifest)} new) -> {OUT}")
     # uniqueness sanity
     caps = [m["caption"] for m in manifest.values()]
     titles = [m["title"] for m in manifest.values()]
@@ -178,7 +246,7 @@ def main():
     print(f"unique names: {len(set(names)) == len(names)}")
     print(f"unique captions: {len(set(caps)) == len(caps)}")
     print(f"unique titles: {len(set(titles)) == len(titles)}")
-    for nm in sorted(names)[:5]:
+    for nm in sorted(names)[-5:]:
         print(f"  {nm}  |  {manifest[nm]['title']}")
 
 
