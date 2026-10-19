@@ -1,3 +1,5 @@
+// node src/scripts/cartoon.js --parts 5
+
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 const ffprobePath = require("@ffprobe-installer/ffprobe").path;
@@ -18,6 +20,7 @@ const INPUT_DIR = path.join(__dirname, "..", "input");
 const INTRO_DIR = path.join(__dirname, "..", "intro");
 const ASSETS_DIR = path.join(__dirname, "..", "assets");
 const AUDIO_DIR = path.join(__dirname, "..", "audio");
+const VOICEOVER_DIR = path.join(AUDIO_DIR, "voiceOver"); // narration / cartoon SFX clips
 const PART_DIR = path.join(__dirname, "..", "output", "tempParts"); // temp cut segments
 const OUTPUT_DIR = path.join(__dirname, "..", "output", "cartoon"); // final 1:1 reels
 
@@ -28,14 +31,20 @@ const features = {
   intro: false,
   text: false,
   overlay: false,
-  logo: true,
-  partDuration: 200,
+  logo: false,
+  partDuration: 100,
+  parts: 5,
+  minPartDuration: 15,
+  maxPartDuration: 100,
+  randomStart: true,      // grab each part from a random frame within its scope
+  voiceOver: true,        // overlay a random clip from src/audio/voiceOver on each part
+  voiceOverVolume: 0.29,   // narration/SFX loudness (mixed over original + bed)
   minInputSeconds: 20,
   minPartSeconds: 15,
   speedFactor: 1.03,
   blur: false,
   blurSectionHeight: 100,
-  trimStart: 20,
+  trimStart: 70,
   trimEnd: 80,
 };
 
@@ -50,9 +59,9 @@ const OVERLAY_DURATION = 1.8;
 const OVERLAY_MIN_GAP = 6;
 const OVERLAY_MAX_GAP = 15;
 const BLUR_STRENGTH = 3;
-const VOICE_PITCH = 0.82;
-const ORIGINAL_AUDIO_VOLUME = 0.8;
-const BED_AUDIO_VOLUME = 0.19;
+const VOICE_PITCH = 0.87;
+const ORIGINAL_AUDIO_VOLUME = 0.84;
+const BED_AUDIO_VOLUME = 0.14;
 const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".mkv", ".webm"]);
 const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
@@ -184,6 +193,58 @@ function planSegments(totalDuration, partSeconds, minPartSeconds) {
   return segments;
 }
 
+function randBetween(min, max) {
+  return min + Math.random() * Math.max(0, max - min);
+}
+
+// Build the list of parts to cut, mirroring cartoonToReels.js:
+//   • Fixed-count mode (partsCount > 0): split the trimmed video into
+//     partsCount equal scopes and take ONE window from each — a random
+//     duration between min..max, grabbed from a random frame inside the scope
+//     (when randomStart). Guarantees exactly N varied reels across the video.
+//   • Sequential mode (partsCount <= 0): cover the video from 0, giving each
+//     part a random duration in [min..max] instead of a fixed length.
+function planParts(totalDuration, { partsCount, minDur, maxDur, minPartSeconds, randomStart }) {
+  const dur = Math.max(0, totalDuration);
+  const lo = Math.max(1, Math.min(minDur, dur));
+  const hi = Math.max(lo, Math.min(maxDur, dur));
+
+  if (partsCount && partsCount > 0) {
+    const n = Math.max(1, Math.min(partsCount, Math.floor(dur / Math.max(1, minPartSeconds)) || 1));
+    const scopeLen = dur / n;
+    const segments = [];
+    for (let i = 0; i < n; i++) {
+      const scopeStart = scopeLen * i;
+      const floor = Math.min(minPartSeconds, scopeLen);
+      let segDur = Math.min(randBetween(lo, hi), scopeLen);
+      if (segDur < floor) segDur = floor;
+      let start = scopeStart;
+      if (randomStart && scopeLen > segDur) {
+        start = scopeStart + Math.random() * (scopeLen - segDur);
+      }
+      start = Math.max(0, Math.min(start, dur - segDur));
+      segments.push({ start, duration: segDur });
+    }
+    return segments;
+  }
+
+  // Sequential: random per-part length, walking forward from 0.
+  const segments = [];
+  let start = 0;
+  while (start < dur - 0.1) {
+    const remaining = dur - start;
+    if (segments.length > 0 && remaining < minPartSeconds) {
+      segments[segments.length - 1].duration += remaining;
+      break;
+    }
+    let segDur = Math.min(randBetween(lo, hi), remaining);
+    if (segDur < Math.min(minPartSeconds, remaining)) segDur = Math.min(minPartSeconds, remaining);
+    segments.push({ start, duration: segDur });
+    start += segDur;
+  }
+  return segments;
+}
+
 // Sanitize a filename for safe use as an ffmpeg input/output argument.
 // Characters like '#' are interpreted by ffmpeg as protocol/segment markers and
 // silently corrupt commands (e.g. a trimmed copy collapses to a few seconds).
@@ -231,6 +292,20 @@ function buildOverlayPlan(mainDuration, assetCount) {
   return overlays;
 }
 
+// Pick a random narration / SFX clip from src/audio/voiceOver for voice-over.
+function pickVoiceover() {
+  try {
+    const files = fs
+      .readdirSync(VOICEOVER_DIR)
+      .filter((f) => /\.(mp3|m4a|wav|aac|ogg)$/i.test(f))
+      .map((f) => path.join(VOICEOVER_DIR, f));
+    if (files.length === 0) return null;
+    return files[Math.floor(Math.random() * files.length)];
+  } catch {
+    return null;
+  }
+}
+
 // ------------------------------------------------------ per-part processing
 async function videoProcessor({
   videoPath,
@@ -256,7 +331,7 @@ async function videoProcessor({
   const drawtextFont = assetPath("RacingSansOne-Regular.ttf")
     .replace(/\\/g, "\\\\")
     .replace(/:/g, "\\:");
-  const logoPath = assetPath("logo.png");
+  const logoPath = assetPath("cartoon-mornings.png");
 
   const [mainOrigDur, introOrigDur] = await Promise.all([
     getMediaDuration(videoPath),
@@ -284,6 +359,10 @@ async function videoProcessor({
     audioFiles.length > 0 ? audioFiles[getRandomNumber(0, audioFiles.length - 1)] : null;
   const hasBed = !!extraAudio && fs.existsSync(extraAudio);
 
+  // Optional voice-over: a random narration/SFX clip from src/audio/voiceOver.
+  const voiceover = features.voiceOver ? pickVoiceover() : null;
+  const hasVoiceover = !!voiceover && fs.existsSync(voiceover);
+
   // Optional overlay assets.
   const overlayAssets = showOverlay ? getOverlayAssets() : [];
   const overlays = showOverlay
@@ -307,16 +386,21 @@ async function videoProcessor({
   const outputVideo = path.join(outputDir, outputFileName);
 
   console.log(`🎨 Processing ${fileName} -> ${outputFileName}`);
-  console.log(`   duration ${mainDuration.toFixed(1)}s, intro ${introDuration.toFixed(1)}s, bed ${hasBed ? "on" : "off"}, logo ${hasLogo ? "on" : "off"}, overlay ${overlays.length}, blur ${features.blur ? `on (${features.blurSectionHeight}px bands)` : "off"}`);
+  console.log(`   duration ${mainDuration.toFixed(1)}s, intro ${introDuration.toFixed(1)}s, bed ${hasBed ? "on" : "off"}, voiceover ${hasVoiceover ? path.basename(voiceover) : "off"}, logo ${hasLogo ? "on" : "off"}, overlay ${overlays.length}, blur ${features.blur ? `on (${features.blurSectionHeight}px bands)` : "off"}`);
 
-  // Build ffmpeg inputs: [0]=main video, [1]=bed audio (if any), then overlays,
-  // then logo (if any), then intro (if any). The part is already trimmed by
-  // splitVideo, so no -ss is applied here.
+  // Build ffmpeg inputs: [0]=main video, [1]=bed audio (if any), then voice-over
+  // (if any), then overlays, then logo (if any), then intro (if any). The part is
+  // already trimmed by splitVideo, so no -ss is applied here.
   const command = ffmpeg();
   command.input(videoPath);
   let inputIndex = 1;
   if (hasBed) {
     command.input(extraAudio);
+    inputIndex += 1;
+  }
+  const voInputIndex = hasVoiceover ? inputIndex : null;
+  if (hasVoiceover) {
+    command.input(voiceover);
     inputIndex += 1;
   }
   const overlayInputStart = inputIndex;
@@ -419,14 +503,25 @@ async function videoProcessor({
   if (hasBed) {
     const bedIdx = 1;
     fc.push(`[${bedIdx}:a]${atempoFilters(SPEED_FACTOR)}[extraamain]`);
-  }
-  if (hasBed) {
     fc.push(
       `[extraamain]atrim=duration=${mainDuration.toFixed(3)},volume=${BED_AUDIO_VOLUME}[mainbed]`,
     );
-    fc.push(`[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[maina]`);
+    fc.push(`[mainorig][mainbed]amix=inputs=2:duration=first:dropout_transition=2[mainmix]`);
   } else {
-    fc.push(`[mainorig]anull[maina]`);
+    fc.push(`[mainorig]anull[mainmix]`);
+  }
+  // Layer the voice-over on top of the base (original + bed) mix. The voice clip
+  // is NOT pitched/tempo-shifted — it's narration or SFX meant to sit over the
+  // video. duration=first keeps the reel length tied to the original audio.
+  if (hasVoiceover) {
+    fc.push(
+      `[${voInputIndex}:a]aresample=44100,atrim=duration=${mainDuration.toFixed(3)},asetpts=PTS-STARTPTS,volume=${features.voiceOverVolume}[mainvo]`,
+    );
+    fc.push(
+      `[mainmix][mainvo]amix=inputs=2:duration=first:dropout_transition=2,volume=2.0[maina]`,
+    );
+  } else {
+    fc.push(`[mainmix]anull[maina]`);
   }
 
   fc.push(
@@ -492,6 +587,7 @@ async function splitVideo({
   assetsDir,
   audioDir,
   partSeconds = features.partDuration,
+  partsCount = 0,
 }) {
   fs.mkdirSync(tempPartsDir, { recursive: true });
   fs.mkdirSync(processedOutputDir, { recursive: true });
@@ -552,7 +648,18 @@ async function splitVideo({
     totalDuration = await getMediaDuration(sourceVideo);
   }
 
-  const segments = planSegments(totalDuration, partSeconds, features.minPartSeconds);
+  const segments = planParts(totalDuration, {
+    partsCount,
+    minDur: features.minPartDuration || partSeconds,
+    maxDur: features.maxPartDuration || partSeconds,
+    minPartSeconds: features.minPartSeconds,
+    randomStart: features.randomStart,
+  });
+  console.log(
+    `  plan ${segments.length} part(s) from ${totalDuration.toFixed(0)}s trimmed source ` +
+      `(parts=${partsCount || "auto"}, len ${features.minPartDuration}–${features.maxPartDuration}s, ` +
+      `randomStart=${features.randomStart ? "on" : "off"})`,
+  );
   const baseName = path.parse(sourceVideo).name;
   const processedFiles = [];
   const failures = [];
@@ -606,15 +713,56 @@ async function splitVideo({
 }
 
 // ---------------------------------------------------------------------- run
-async function run() {
-  const inputFiles = fs
-    .readdirSync(INPUT_DIR)
-    .map((file) => path.join(INPUT_DIR, file))
-    .filter((f) => VIDEO_EXTENSIONS.has(path.extname(f).toLowerCase()));
+async function run(argv = process.argv.slice(2)) {
+  // CLI flags: --parts N | --input <file> | --min <sec> | --max <sec>
+  // A positional input path is the first token that is neither a flag nor the
+  // value of a flag (otherwise `--parts 5` would mistake "5" for the input file).
+  const VALUE_FLAGS = new Set(["--parts", "--input", "--min", "--max"]);
+  let inputArg = null;
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a.startsWith("--")) { if (VALUE_FLAGS.has(a)) i++; continue; }
+    inputArg = a; break;
+  }
+  const flagVal = (name) => {
+    const idx = argv.indexOf(name);
+    return idx >= 0 && argv[idx + 1] && !argv[idx + 1].startsWith("--") ? argv[idx + 1] : null;
+  };
+
+  // --parts overrides features.parts; 0 = auto (cover whole video).
+  const partsRaw = flagVal("--parts");
+  const partsCount = partsRaw != null
+    ? Math.max(0, Math.min(60, Number(partsRaw) || 0))
+    : (features.parts || 0);
+  const minRaw = flagVal("--min");
+  if (minRaw != null && Number(minRaw) > 0) features.minPartDuration = Number(minRaw);
+  const maxRaw = flagVal("--max");
+  if (maxRaw != null && Number(maxRaw) > 0) features.maxPartDuration = Number(maxRaw);
+
+  // --input (or a positional path) processes a single file; otherwise scan INPUT_DIR.
+  const explicit = flagVal("--input") || inputArg;
+  let inputFiles;
+  if (explicit) {
+    const p = path.resolve(explicit);
+    if (!fs.existsSync(p)) throw new Error(`Input not found: ${explicit}`);
+    inputFiles = [p];
+  } else {
+    inputFiles = fs
+      .readdirSync(INPUT_DIR)
+      .map((file) => path.join(INPUT_DIR, file))
+      .filter((f) => VIDEO_EXTENSIONS.has(path.extname(f).toLowerCase()));
+  }
 
   if (inputFiles.length === 0) {
     throw new Error(`No video found in input dir: ${INPUT_DIR}`);
   }
+
+  console.log(
+    `cartoon — ${inputFiles.length} source file(s) | parts/source: ${partsCount || "auto"} | ` +
+      `part length ${features.minPartDuration}–${features.maxPartDuration}s | ` +
+      `randomStart: ${features.randomStart ? "on" : "off"} | ` +
+      `trim ${features.trimStart}s/${features.trimEnd}s`,
+  );
 
   let failedInputs = 0;
   const allOutputs = [];
@@ -628,6 +776,7 @@ async function run() {
         assetsDir: ASSETS_DIR,
         audioDir: AUDIO_DIR,
         partSeconds: features.partDuration,
+        partsCount,
       });
       console.log(`✅ ${path.basename(inputVideo)} -> ${results.length} part(s)`);
       allOutputs.push(...results.map((r) => r.output));
@@ -644,7 +793,7 @@ async function run() {
   }
 }
 
-module.exports = { videoProcessor, splitVideo, run, features };
+module.exports = { videoProcessor, splitVideo, run, features, planParts, planSegments };
 
 // Run directly (node src/scripts/cartoon.js), not when required by a test.
 if (require.main === module) {

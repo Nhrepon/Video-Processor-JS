@@ -10,4 +10,14 @@ src/config/*.json
 .agents
 .claude
 src/autopost/video
+src/B2E/work/
+src/B2E/output/
+src/y2shorts/cache/
+src/transcribe/out/
 
+# Holds a bearer token for the local LLM endpoint
+src/B2E/local-llm.json
+
+
+__pycache__/
+*.pyc

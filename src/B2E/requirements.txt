@@ -1,0 +1,5 @@
+# B2E pipeline dependencies
+# Verified installable on CPython 3.14 (ctranslate2 4.8.2 ships cp314 wheels).
+
+faster-whisper>=1.2.1
+edge-tts>=7.0.0

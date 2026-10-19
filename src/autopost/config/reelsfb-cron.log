@@ -129,3 +129,171 @@
 [2026-09-20T10:01:54.387Z] OK cartoonmornings-ends-friendships-b3-ep28.mp4 -> video_id 2100851683893311 (SCHEDULED)
 [2026-09-20T10:01:54.388Z] Done. uploaded=6 blocked=0 failed=0
 [2026-09-20T10:01:54Z] === schedule_pending exit 0 ===
+[2026-09-20T10:52:20Z] === schedule_pending dry=False viral=True === 67 pending reel(s), first publish 2026-09-20T10:52:20+00:00
+[2026-09-20T11:01:29Z] === schedule_pending dry=True viral=True === 12 pending reel(s), first publish 2026-09-20T11:01:29+00:00
+[2026-09-20T11:01:29.296Z] Reels 67 total, 12 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T11:01:29.298Z] Mode: SCHEDULED from 2026-09-20T11:01:29.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T11:01:29.298Z] DRY RUN
+[2026-09-20T11:01:29.319Z]   PASS cartoonmornings-toms-face-says-it-all-p03-03.mp4 -> 2026-09-20T12:00:00.000Z (20/09/2026, 18:00:00)
+[2026-09-20T11:01:29.319Z]   PASS cartoonmornings-pov-youre-the-mouse-who-always-wins-p03-03.mp4 -> 2026-09-21T02:00:00.000Z (21/09/2026, 08:00:00)
+[2026-09-20T11:01:29.319Z]   PASS cartoonmornings-when-the-tiny-hero-wins-again-p02-02.mp4 -> 2026-09-21T06:30:00.000Z (21/09/2026, 12:30:00)
+[2026-09-20T11:01:29.320Z]   PASS cartoonmornings-grow-up-on-these-cartoons-p01-01.mp4 -> 2026-09-21T12:00:00.000Z (21/09/2026, 18:00:00)
+[2026-09-20T11:01:29.320Z]   PASS cartoonmornings-rate-this-chase-1-10-p01-01.mp4 -> 2026-09-22T02:00:00.000Z (22/09/2026, 08:00:00)
+[2026-09-20T11:01:29.320Z]   PASS cartoonmornings-the-comedy-timing-is-elite-p01-01.mp4 -> 2026-09-22T06:30:00.000Z (22/09/2026, 12:30:00)
+[2026-09-20T11:01:29.321Z]   PASS cartoonmornings-this-clip-is-pure-chaos-p03-03.mp4 -> 2026-09-22T12:00:00.000Z (22/09/2026, 18:00:00)
+[2026-09-20T11:01:29.321Z]   PASS cartoonmornings-this-was-my-childhood-p01-01.mp4 -> 2026-09-23T02:00:00.000Z (23/09/2026, 08:00:00)
+[2026-09-20T11:01:29.321Z]   PASS cartoonmornings-who-is-winning-this-p03-03.mp4 -> 2026-09-23T06:30:00.000Z (23/09/2026, 12:30:00)
+[2026-09-20T11:01:29.322Z]   PASS cartoonmornings-prank-level-100-p01-01.mp4 -> 2026-09-23T12:00:00.000Z (23/09/2026, 18:00:00)
+[2026-09-20T11:01:29.322Z]   PASS cartoonmornings-prank-level-100-p02-02.mp4 -> 2026-09-24T02:00:00.000Z (24/09/2026, 08:00:00)
+[2026-09-20T11:01:29.322Z]   PASS cartoonmornings-jerrys-confidence-monday-energy-p01-01.mp4 -> 2026-09-24T06:30:00.000Z (24/09/2026, 12:30:00)
+[2026-09-20T11:01:29Z] === schedule_pending exit 0 ===
+[2026-09-20T11:01:43Z] === schedule_pending dry=False viral=True === 12 pending reel(s), first publish 2026-09-20T11:01:43+00:00
+[2026-09-20T11:01:43.079Z] Reels 67 total, 12 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T11:01:43.081Z] Mode: SCHEDULED from 2026-09-20T11:01:43.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T11:01:43.484Z] Uploading cartoonmornings-toms-face-says-it-all-p03-03.mp4 (SCHEDULED 2026-09-20T12:00:00.000Z) | pool-variant #0 | thumb @5800ms
+[2026-09-20T11:01:51.207Z] OK cartoonmornings-toms-face-says-it-all-p03-03.mp4 -> video_id 1629427265329824 (SCHEDULED)
+[2026-09-20T11:01:51.622Z] Uploading cartoonmornings-rate-this-chase-1-10-p01-01.mp4 (SCHEDULED 2026-09-21T02:00:00.000Z) | pool-variant #0 | thumb @6800ms
+[2026-09-20T11:02:02.092Z] OK cartoonmornings-rate-this-chase-1-10-p01-01.mp4 -> video_id 4163696470589694 (SCHEDULED)
+[2026-09-20T11:02:02.521Z] Uploading cartoonmornings-who-is-winning-this-p03-03.mp4 (SCHEDULED 2026-09-21T06:30:00.000Z) | pool-variant #0 | thumb @4680ms
+[2026-09-20T11:02:11.179Z] OK cartoonmornings-who-is-winning-this-p03-03.mp4 -> video_id 1061883979955073 (SCHEDULED)
+[2026-09-20T11:02:11.602Z] Uploading cartoonmornings-pov-youre-the-mouse-who-always-wins-p03-03.mp4 (SCHEDULED 2026-09-21T12:00:00.000Z) | pool-variant #0 | thumb @6746ms
+[2026-09-20T11:02:20.989Z] OK cartoonmornings-pov-youre-the-mouse-who-always-wins-p03-03.mp4 -> video_id 957346550743766 (SCHEDULED)
+[2026-09-20T11:02:21.441Z] Uploading cartoonmornings-grow-up-on-these-cartoons-p01-01.mp4 (SCHEDULED 2026-09-22T02:00:00.000Z) | pool-variant #0 | thumb @4606ms
+[2026-09-20T11:02:32.500Z] OK cartoonmornings-grow-up-on-these-cartoons-p01-01.mp4 -> video_id 903744695933420 (SCHEDULED)
+[2026-09-20T11:02:32.921Z] Uploading cartoonmornings-jerrys-confidence-monday-energy-p01-01.mp4 (SCHEDULED 2026-09-22T06:30:00.000Z) | pool-variant #0 | thumb @6200ms
+[2026-09-20T11:02:43.016Z] OK cartoonmornings-jerrys-confidence-monday-energy-p01-01.mp4 -> video_id 4523534297965861 (SCHEDULED)
+[2026-09-20T11:02:43.455Z] Uploading cartoonmornings-prank-level-100-p02-02.mp4 (SCHEDULED 2026-09-22T12:00:00.000Z) | pool-variant #0 | thumb @5346ms
+[2026-09-20T11:02:51.650Z] OK cartoonmornings-prank-level-100-p02-02.mp4 -> video_id 28488321377518951 (SCHEDULED)
+[2026-09-20T11:02:52.082Z] Uploading cartoonmornings-the-comedy-timing-is-elite-p01-01.mp4 (SCHEDULED 2026-09-23T02:00:00.000Z) | pool-variant #0 | thumb @5206ms
+[2026-09-20T11:03:01.543Z] OK cartoonmornings-the-comedy-timing-is-elite-p01-01.mp4 -> video_id 1573645900363366 (SCHEDULED)
+[2026-09-20T11:03:01.983Z] Uploading cartoonmornings-this-clip-is-pure-chaos-p03-03.mp4 (SCHEDULED 2026-09-23T06:30:00.000Z) | pool-variant #0 | thumb @4800ms
+[2026-09-20T11:03:09.898Z] OK cartoonmornings-this-clip-is-pure-chaos-p03-03.mp4 -> video_id 969329119543980 (SCHEDULED)
+[2026-09-20T11:03:10.395Z] Uploading cartoonmornings-this-was-my-childhood-p01-01.mp4 (SCHEDULED 2026-09-23T12:00:00.000Z) | pool-variant #0 | thumb @4600ms
+[2026-09-20T11:03:19.495Z] OK cartoonmornings-this-was-my-childhood-p01-01.mp4 -> video_id 1544627124017536 (SCHEDULED)
+[2026-09-20T11:03:19.921Z] Uploading cartoonmornings-prank-level-100-p01-01.mp4 (SCHEDULED 2026-09-24T02:00:00.000Z) | pool-variant #0 | thumb @3000ms
+[2026-09-20T11:03:28.178Z] OK cartoonmornings-prank-level-100-p01-01.mp4 -> video_id 2656854114740201 (SCHEDULED)
+[2026-09-20T11:03:28.617Z] Uploading cartoonmornings-when-the-tiny-hero-wins-again-p02-02.mp4 (SCHEDULED 2026-09-24T06:30:00.000Z) | pool-variant #0 | thumb @7200ms
+[2026-09-20T11:03:37.670Z] OK cartoonmornings-when-the-tiny-hero-wins-again-p02-02.mp4 -> video_id 1374856158168328 (SCHEDULED)
+[2026-09-20T11:03:37.670Z] Done. uploaded=12 blocked=0 failed=0
+[2026-09-20T11:03:37Z] === schedule_pending exit 0 ===
+[2026-09-20T11:05:02Z] 0 pending reels - nothing to do.
+[2026-09-20T14:05:03Z] === schedule_pending dry=False viral=False === 10 pending reel(s), first publish 2026-10-09T04:16:00+00:00
+[2026-09-20T14:05:03.991Z] Reels 62 total, 10 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T14:05:03.998Z] Mode: SCHEDULED from 2026-10-09T04:16:00.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T14:05:05.301Z] Uploading cartoonmornings-he-set-a-trap-for-jerry-think-he-got-him-b3-ep98.mp4 (SCHEDULED 2026-10-09T04:16:00.000Z) | manifest-unique | thumb @7000ms
+[2026-09-20T14:05:13.451Z] OK cartoonmornings-he-set-a-trap-for-jerry-think-he-got-him-b3-ep98.mp4 -> video_id 1839512267226163 (SCHEDULED)
+[2026-09-20T14:05:13.864Z] Uploading cartoonmornings-toms-trap-design-1010-toms-trap-execution-010-the-gap-is-hil-b3-ep101.mp4 (SCHEDULED 2026-10-09T19:57:27.693Z) | manifest-unique | thumb @3600ms
+[2026-09-20T14:05:23.510Z] OK cartoonmornings-toms-trap-design-1010-toms-trap-execution-010-the-gap-is-hil-b3-ep101.mp4 -> video_id 28762046436713327 (SCHEDULED)
+[2026-09-20T14:05:23.915Z] Uploading cartoonmornings-pov-your-group-chat-would-be-so-chaotic-if-tom-and-jerry-wer-b3-ep100.mp4 (SCHEDULED 2026-10-10T08:38:35.916Z) | manifest-unique | thumb @7400ms
+[2026-09-20T14:05:32.977Z] OK cartoonmornings-pov-your-group-chat-would-be-so-chaotic-if-tom-and-jerry-wer-b3-ep100.mp4 -> video_id 955125997630534 (SCHEDULED)
+[2026-09-20T14:05:33.392Z] Uploading cartoonmornings-pov-you-grew-up-on-these-cartoons-this-was-our-childhood-b3-ep106.mp4 (SCHEDULED 2026-10-10T22:46:46.703Z) | manifest-unique | thumb @5400ms
+[2026-09-20T14:05:41.152Z] OK cartoonmornings-pov-you-grew-up-on-these-cartoons-this-was-our-childhood-b3-ep106.mp4 -> video_id 1786257839193140 (SCHEDULED)
+[2026-09-20T14:05:41.575Z] Uploading cartoonmornings-bookmark-for-when-you-need-a-laugh-trust-me-on-this-b3-ep102.mp4 (SCHEDULED 2026-10-11T17:18:18.328Z) | manifest-unique | thumb @7813ms
+[2026-09-20T14:05:50.594Z] OK cartoonmornings-bookmark-for-when-you-need-a-laugh-trust-me-on-this-b3-ep102.mp4 -> video_id 968746822200717 (SCHEDULED)
+[2026-09-20T14:05:50.995Z] Uploading cartoonmornings-when-the-cartoon-beef-is-more-entertaining-than-real-tv-foll-b3-ep105.mp4 (SCHEDULED 2026-10-12T07:18:16.188Z) | manifest-unique | thumb @7200ms
+[2026-09-20T14:05:59.569Z] OK cartoonmornings-when-the-cartoon-beef-is-more-entertaining-than-real-tv-foll-b3-ep105.mp4 -> video_id 1635206907976095 (SCHEDULED)
+[2026-09-20T14:05:59.966Z] Uploading cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-watch-what-happens-n-b3-ep97.mp4 (SCHEDULED 2026-10-12T19:50:42.927Z) | manifest-unique | thumb @6406ms
+[2026-09-20T14:06:09.894Z] OK cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-watch-what-happens-n-b3-ep97.mp4 -> video_id 2273228086797971 (SCHEDULED)
+[2026-09-20T14:06:10.307Z] Uploading cartoonmornings-the-second-jerry-became-legend-nobody-expected-this-b3-ep103.mp4 (SCHEDULED 2026-10-13T14:01:45.780Z) | manifest-unique | thumb @3166ms
+[2026-09-20T14:06:18.691Z] OK cartoonmornings-the-second-jerry-became-legend-nobody-expected-this-b3-ep103.mp4 -> video_id 1728438748249082 (SCHEDULED)
+[2026-09-20T14:06:19.102Z] Uploading cartoonmornings-jerrys-confidence-monday-energy-send-to-someone-who-needs-it-b3-ep104.mp4 (SCHEDULED 2026-10-14T07:48:45.100Z) | manifest-unique | thumb @6800ms
+[2026-09-20T14:06:28.856Z] OK cartoonmornings-jerrys-confidence-monday-energy-send-to-someone-who-needs-it-b3-ep104.mp4 -> video_id 2222571144981145 (SCHEDULED)
+[2026-09-20T14:06:29.258Z] Uploading cartoonmornings-jerry-be-like-i-didnt-study-and-i-still-passed-the-exam-b3-ep99.mp4 (SCHEDULED 2026-10-14T20:08:44.088Z) | manifest-unique | thumb @4800ms
+[2026-09-20T14:06:37.807Z] OK cartoonmornings-jerry-be-like-i-didnt-study-and-i-still-passed-the-exam-b3-ep99.mp4 -> video_id 2151554958727764 (SCHEDULED)
+[2026-09-20T14:06:37.808Z] Done. uploaded=10 blocked=0 failed=0
+[2026-09-20T14:06:37Z] === schedule_pending exit 0 ===
+[2026-09-21T08:05:02Z] 0 pending reels - nothing to do.
+[2026-09-21T11:05:02Z] 0 pending reels - nothing to do.
+[2026-09-22T05:05:03Z] 0 pending reels - nothing to do.
+[2026-09-22T08:05:04Z] 0 pending reels - nothing to do.
+[2026-09-22T11:05:03Z] 0 pending reels - nothing to do.
+[2026-09-23T05:05:03Z] 0 pending reels - nothing to do.
+[2026-09-23T08:05:04Z] 0 pending reels - nothing to do.
+[2026-09-23T11:05:02Z] 0 pending reels - nothing to do.
+[2026-09-23T14:05:04Z] 0 pending reels - nothing to do.
+[2026-09-24T05:05:03Z] 0 pending reels - nothing to do.
+[2026-09-24T08:05:03Z] 0 pending reels - nothing to do.
+[2026-09-24T11:05:03Z] 0 pending reels - nothing to do.
+[2026-09-24T14:05:02Z] 0 pending reels - nothing to do.
+[2026-09-26T05:05:02Z] 0 pending reels - nothing to do.
+[2026-09-26T08:05:03Z] 0 pending reels - nothing to do.
+[2026-09-26T11:05:02Z] 0 pending reels - nothing to do.
+[2026-09-27T05:05:03Z] 0 pending reels - nothing to do.
+[2026-09-27T08:05:03Z] 0 pending reels - nothing to do.
+[2026-09-27T11:05:03Z] 0 pending reels - nothing to do.
+[2026-09-28T05:05:03Z] 0 pending reels - nothing to do.
+[2026-09-28T11:05:03Z] 0 pending reels - nothing to do.
+[2026-09-28T14:05:02Z] 0 pending reels - nothing to do.
+[2026-09-29T05:05:03Z] 0 pending reels - nothing to do.
+[2026-09-29T08:05:03Z] 0 pending reels - nothing to do.
+[2026-09-29T11:05:02Z] 0 pending reels - nothing to do.
+[2026-09-30T05:05:02Z] 0 pending reels - nothing to do.
+[2026-09-30T08:05:03Z] 0 pending reels - nothing to do.
+[2026-09-30T11:05:02Z] === schedule_pending dry=False viral=False === 1 pending reel(s), first publish 2026-10-15T15:56:44+00:00
+[2026-09-30T11:05:02.773Z] Reels 1 total, 1 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-30T11:05:02.784Z] Mode: SCHEDULED from 2026-10-15T15:56:44.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-30T11:05:04.297Z] Uploading cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-28b763-01.mp4 (SCHEDULED 2026-10-15T15:56:44.000Z) | pool-variant #0 | thumb @10206ms
+[2026-09-30T11:05:20.128Z] OK cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-28b763-01.mp4 -> video_id 2182429909007089 (SCHEDULED)
+[2026-09-30T11:05:20.136Z] Done. uploaded=1 blocked=0 failed=0
+[2026-09-30T11:05:20Z] === schedule_pending exit 0 ===
+[2026-09-30T14:05:02Z] 0 pending reels - nothing to do.
+[2026-10-01T05:05:03Z] 0 pending reels - nothing to do.
+[2026-10-01T08:05:03Z] 0 pending reels - nothing to do.
+[2026-10-01T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-01T14:05:02Z] 0 pending reels - nothing to do.
+[2026-10-02T11:05:03Z] 0 pending reels - nothing to do.
+[2026-10-02T14:05:02Z] 0 pending reels - nothing to do.
+[2026-10-03T08:05:02Z] === schedule_pending dry=False viral=False === 2 pending reel(s), first publish 2026-10-16T08:42:44+00:00
+[2026-10-03T08:05:02.317Z] Reels 2 total, 2 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-10-03T08:05:02.341Z] Mode: SCHEDULED from 2026-10-16T08:42:44.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-10-03T08:05:03.283Z] Uploading cartoonmornings-toms-face-says-it-all-28b763-01.mp4 (SCHEDULED 2026-10-16T08:42:44.000Z) | pool-variant #0 | thumb @3660ms
+[2026-10-03T08:05:11.763Z] OK cartoonmornings-toms-face-says-it-all-28b763-01.mp4 -> video_id 1418015937201528 (SCHEDULED)
+[2026-10-03T08:05:12.145Z] Uploading cartoonmornings-send-this-to-your-chaos-buddy-28b763-01.mp4 (SCHEDULED 2026-10-16T22:47:43.347Z) | pool-variant #0 | thumb @11380ms
+[2026-10-03T08:05:22.686Z] OK cartoonmornings-send-this-to-your-chaos-buddy-28b763-01.mp4 -> video_id 2164779467775231 (SCHEDULED)
+[2026-10-03T08:05:22.686Z] Done. uploaded=2 blocked=0 failed=0
+[2026-10-03T08:05:22Z] === schedule_pending exit 0 ===
+[2026-10-03T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-04T05:05:02Z] 0 pending reels - nothing to do.
+[2026-10-04T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-04T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-05T05:05:02Z] 0 pending reels - nothing to do.
+[2026-10-05T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-05T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-06T05:05:03Z] 0 pending reels - nothing to do.
+[2026-10-06T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-06T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-07T05:05:02Z] 0 pending reels - nothing to do.
+[2026-10-07T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-07T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-08T05:05:03Z] 0 pending reels - nothing to do.
+[2026-10-08T08:05:03Z] 0 pending reels - nothing to do.
+[2026-10-08T11:05:03Z] 0 pending reels - nothing to do.
+[2026-10-10T05:05:03Z] 0 pending reels - nothing to do.
+[2026-10-10T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-10T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-11T05:05:02Z] 0 pending reels - nothing to do.
+[2026-10-11T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-11T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-11T14:05:02Z] 0 pending reels - nothing to do.
+[2026-10-12T05:05:02Z] 0 pending reels - nothing to do.
+[2026-10-12T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-12T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-13T05:05:03Z] 0 pending reels - nothing to do.
+[2026-10-13T08:05:03Z] 0 pending reels - nothing to do.
+[2026-10-13T11:05:10Z] 0 pending reels - nothing to do.
+[2026-10-13T14:05:03Z] 0 pending reels - nothing to do.
+[2026-10-14T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-14T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-15T05:05:03Z] 0 pending reels - nothing to do.
+[2026-10-15T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-15T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-17T08:05:03Z] 0 pending reels - nothing to do.
+[2026-10-17T11:05:02Z] 0 pending reels - nothing to do.
+[2026-10-17T14:05:02Z] 0 pending reels - nothing to do.
+[2026-10-18T05:05:03Z] 0 pending reels - nothing to do.
+[2026-10-18T08:05:02Z] 0 pending reels - nothing to do.
+[2026-10-18T11:05:17Z] 0 pending reels - nothing to do.
+[2026-10-18T14:05:02Z] 0 pending reels - nothing to do.
+[2026-10-19T05:05:04Z] 0 pending reels - nothing to do.
+[2026-10-19T08:05:03Z] 0 pending reels - nothing to do.
+[2026-10-19T11:05:10Z] 0 pending reels - nothing to do.

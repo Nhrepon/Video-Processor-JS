@@ -218,3 +218,193 @@
 [2026-09-20T10:01:46.070Z] Uploading cartoonmornings-ends-friendships-b3-ep28.mp4 (SCHEDULED 2026-09-22T06:30:00.000Z) | manifest-unique | thumb @7600ms
 [2026-09-20T10:01:54.387Z] OK cartoonmornings-ends-friendships-b3-ep28.mp4 -> video_id 2100851683893311 (SCHEDULED)
 [2026-09-20T10:01:54.388Z] Done. uploaded=6 blocked=0 failed=0
+[2026-09-20T10:52:20.683Z] Reels 67 total, 67 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T10:52:20.698Z] Mode: SCHEDULED from 2026-09-20T10:52:20.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T10:52:22.014Z] Uploading cartoonmornings-grow-up-on-these-cartoons-p02-02.mp4 (SCHEDULED 2026-09-20T12:00:00.000Z) | pool-variant #0 | thumb @5120ms
+[2026-09-20T10:52:30.123Z] OK cartoonmornings-grow-up-on-these-cartoons-p02-02.mp4 -> video_id 2068014463798673 (SCHEDULED)
+[2026-09-20T10:52:30.650Z] Uploading cartoonmornings-this-clip-is-pure-chaos-p02-02.mp4 (SCHEDULED 2026-09-21T02:00:00.000Z) | pool-variant #0 | thumb @7000ms
+[2026-09-20T10:52:38.313Z] OK cartoonmornings-this-clip-is-pure-chaos-p02-02.mp4 -> video_id 1850286756337733 (SCHEDULED)
+[2026-09-20T10:52:38.749Z] Uploading cartoonmornings-tomexe-has-stopped-working-p02-02.mp4 (SCHEDULED 2026-09-21T06:30:00.000Z) | pool-variant #0 | thumb @6200ms
+[2026-09-20T10:52:48.305Z] OK cartoonmornings-tomexe-has-stopped-working-p02-02.mp4 -> video_id 1387507962992692 (SCHEDULED)
+[2026-09-20T10:52:48.777Z] Uploading cartoonmornings-pov-youre-tom-planning-at-3am-p02-02.mp4 (SCHEDULED 2026-09-21T12:00:00.000Z) | pool-variant #0 | thumb @4226ms
+[2026-09-20T10:52:55.380Z] OK cartoonmornings-pov-youre-tom-planning-at-3am-p02-02.mp4 -> video_id 1626980359066704 (SCHEDULED)
+[2026-09-20T10:52:55.813Z] Uploading cartoonmornings-rate-this-chase-1-10-p02-02.mp4 (SCHEDULED 2026-09-22T02:00:00.000Z) | pool-variant #0 | thumb @7400ms
+[2026-09-20T10:53:04.398Z] OK cartoonmornings-rate-this-chase-1-10-p02-02.mp4 -> video_id 955964397564104 (SCHEDULED)
+[2026-09-20T10:53:04.838Z] Uploading cartoonmornings-the-comedy-timing-is-elite-p02-02.mp4 (SCHEDULED 2026-09-22T06:30:00.000Z) | pool-variant #0 | thumb @4400ms
+[2026-09-20T10:53:13.601Z] OK cartoonmornings-the-comedy-timing-is-elite-p02-02.mp4 -> video_id 1426480912697519 (SCHEDULED)
+[2026-09-20T10:53:14.135Z] Uploading cartoonmornings-that-one-second-tom-regrets-everything-p03-03.mp4 (SCHEDULED 2026-09-22T12:00:00.000Z) | pool-variant #0 | thumb @5260ms
+[2026-09-20T10:53:23.016Z] OK cartoonmornings-that-one-second-tom-regrets-everything-p03-03.mp4 -> video_id 1059709710023272 (SCHEDULED)
+[2026-09-20T10:53:23.455Z] Uploading cartoonmornings-tomexe-has-stopped-working-p03-03.mp4 (SCHEDULED 2026-09-23T02:00:00.000Z) | pool-variant #0 | thumb @7000ms
+[2026-09-20T10:53:32.380Z] OK cartoonmornings-tomexe-has-stopped-working-p03-03.mp4 -> video_id 1645841057214317 (SCHEDULED)
+[2026-09-20T10:53:32.903Z] Uploading cartoonmornings-he-set-a-trap-for-jerry-p03-03.mp4 (SCHEDULED 2026-09-23T06:30:00.000Z) | pool-variant #0 | thumb @5200ms
+[2026-09-20T10:53:40.191Z] OK cartoonmornings-he-set-a-trap-for-jerry-p03-03.mp4 -> video_id 28570703032542042 (SCHEDULED)
+[2026-09-20T10:53:40.630Z] Uploading cartoonmornings-pov-youre-the-mouse-who-always-wins-p02-02.mp4 (SCHEDULED 2026-09-23T12:00:00.000Z) | pool-variant #0 | thumb @7166ms
+[2026-09-20T10:53:48.371Z] OK cartoonmornings-pov-youre-the-mouse-who-always-wins-p02-02.mp4 -> video_id 1568717524935147 (SCHEDULED)
+[2026-09-20T10:53:48.875Z] Uploading cartoonmornings-grow-up-on-these-cartoons-p03-03.mp4 (SCHEDULED 2026-09-24T02:00:00.000Z) | pool-variant #0 | thumb @7380ms
+[2026-09-20T10:53:57.474Z] OK cartoonmornings-grow-up-on-these-cartoons-p03-03.mp4 -> video_id 1449966780327752 (SCHEDULED)
+[2026-09-20T10:53:57.913Z] Uploading cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-p02-02.mp4 (SCHEDULED 2026-09-24T06:30:00.000Z) | pool-variant #0 | thumb @6326ms
+[2026-09-20T10:54:05.853Z] OK cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-p02-02.mp4 -> video_id 2318051728599112 (SCHEDULED)
+[2026-09-20T10:54:06.383Z] Uploading cartoonmornings-bookmark-for-when-you-need-a-laugh-p03-03.mp4 (SCHEDULED 2026-09-24T12:00:00.000Z) | pool-variant #0 | thumb @4220ms
+[2026-09-20T10:54:13.297Z] OK cartoonmornings-bookmark-for-when-you-need-a-laugh-p03-03.mp4 -> video_id 2048743362432248 (SCHEDULED)
+[2026-09-20T10:54:13.816Z] Uploading cartoonmornings-the-rivalry-that-taught-us-pettiness-p01-01.mp4 (SCHEDULED 2026-09-25T02:00:00.000Z) | pool-variant #0 | thumb @6800ms
+[2026-09-20T10:54:22.856Z] OK cartoonmornings-the-rivalry-that-taught-us-pettiness-p01-01.mp4 -> video_id 1959204998105217 (SCHEDULED)
+[2026-09-20T10:54:23.298Z] Uploading cartoonmornings-that-one-second-tom-regrets-everything-p01-01.mp4 (SCHEDULED 2026-09-25T06:30:00.000Z) | pool-variant #0 | thumb @4000ms
+[2026-09-20T10:54:31.195Z] OK cartoonmornings-that-one-second-tom-regrets-everything-p01-01.mp4 -> video_id 1358867329356185 (SCHEDULED)
+[2026-09-20T10:54:31.659Z] Uploading cartoonmornings-invisible-attack-p01-01.mp4 (SCHEDULED 2026-09-25T12:00:00.000Z) | pool-variant #0 | thumb @4000ms
+[2026-09-20T10:54:39.411Z] OK cartoonmornings-invisible-attack-p01-01.mp4 -> video_id 4166167613686324 (SCHEDULED)
+[2026-09-20T10:54:39.850Z] Uploading cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-p01-01.mp4 (SCHEDULED 2026-09-26T02:00:00.000Z) | pool-variant #0 | thumb @7793ms
+[2026-09-20T10:54:48.987Z] OK cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-p01-01.mp4 -> video_id 1602141598128111 (SCHEDULED)
+[2026-09-20T10:54:49.522Z] Uploading cartoonmornings-this-was-my-childhood-p02-02.mp4 (SCHEDULED 2026-09-26T06:30:00.000Z) | pool-variant #0 | thumb @5206ms
+[2026-09-20T10:54:58.791Z] OK cartoonmornings-this-was-my-childhood-p02-02.mp4 -> video_id 2135220273787488 (SCHEDULED)
+[2026-09-20T10:54:59.213Z] Uploading cartoonmornings-who-is-winning-this-p01-01.mp4 (SCHEDULED 2026-09-26T12:00:00.000Z) | pool-variant #0 | thumb @7800ms
+[2026-09-20T10:55:07.735Z] OK cartoonmornings-who-is-winning-this-p01-01.mp4 -> video_id 2838800059825216 (SCHEDULED)
+[2026-09-20T10:55:08.162Z] Uploading cartoonmornings-childhood-memory-unlocked-p03-03.mp4 (SCHEDULED 2026-09-27T02:00:00.000Z) | pool-variant #0 | thumb @3000ms
+[2026-09-20T10:55:16.865Z] OK cartoonmornings-childhood-memory-unlocked-p03-03.mp4 -> video_id 2170311503896513 (SCHEDULED)
+[2026-09-20T10:55:17.298Z] Uploading cartoonmornings-invisible-attack-p03-03.mp4 (SCHEDULED 2026-09-27T06:30:00.000Z) | pool-variant #0 | thumb @6000ms
+[2026-09-20T10:55:27.965Z] OK cartoonmornings-invisible-attack-p03-03.mp4 -> video_id 968140583011860 (SCHEDULED)
+[2026-09-20T10:55:28.366Z] Uploading cartoonmornings-send-this-to-your-chaos-buddy-p02-02.mp4 (SCHEDULED 2026-09-27T12:00:00.000Z) | pool-variant #0 | thumb @4400ms
+[2026-09-20T10:55:37.602Z] OK cartoonmornings-send-this-to-your-chaos-buddy-p02-02.mp4 -> video_id 1344870757482769 (SCHEDULED)
+[2026-09-20T10:55:38.027Z] Uploading cartoonmornings-pov-youre-tom-planning-at-3am-p03-03.mp4 (SCHEDULED 2026-09-28T02:00:00.000Z) | pool-variant #0 | thumb @4013ms
+[2026-09-20T10:55:46.374Z] OK cartoonmornings-pov-youre-tom-planning-at-3am-p03-03.mp4 -> video_id 1904192087233474 (SCHEDULED)
+[2026-09-20T10:55:46.817Z] Uploading cartoonmornings-he-set-a-trap-for-jerry-p02-02.mp4 (SCHEDULED 2026-09-28T06:30:00.000Z) | pool-variant #0 | thumb @8220ms
+[2026-09-20T10:55:56.202Z] OK cartoonmornings-he-set-a-trap-for-jerry-p02-02.mp4 -> video_id 1134179009272787 (SCHEDULED)
+[2026-09-20T10:55:56.646Z] Uploading cartoonmornings-jerry-said-not-today-p02-02.mp4 (SCHEDULED 2026-09-28T12:00:00.000Z) | pool-variant #0 | thumb @8233ms
+[2026-09-20T10:56:06.971Z] OK cartoonmornings-jerry-said-not-today-p02-02.mp4 -> video_id 28444320311901656 (SCHEDULED)
+[2026-09-20T10:56:07.419Z] Uploading cartoonmornings-jerry-said-not-today-p01-01.mp4 (SCHEDULED 2026-09-29T02:00:00.000Z) | pool-variant #0 | thumb @6000ms
+[2026-09-20T10:56:17.076Z] OK cartoonmornings-jerry-said-not-today-p01-01.mp4 -> video_id 1618820569879032 (SCHEDULED)
+[2026-09-20T10:56:17.505Z] Uploading cartoonmornings-prank-level-100-p03-03.mp4 (SCHEDULED 2026-09-29T06:30:00.000Z) | pool-variant #0 | thumb @6326ms
+[2026-09-20T10:56:25.807Z] OK cartoonmornings-prank-level-100-p03-03.mp4 -> video_id 1108599158348833 (SCHEDULED)
+[2026-09-20T10:56:26.246Z] Uploading cartoonmornings-rate-this-chase-1-10-p03-03.mp4 (SCHEDULED 2026-09-29T12:00:00.000Z) | pool-variant #0 | thumb @3600ms
+[2026-09-20T10:56:34.286Z] OK cartoonmornings-rate-this-chase-1-10-p03-03.mp4 -> video_id 2059106804728661 (SCHEDULED)
+[2026-09-20T10:56:34.690Z] Uploading cartoonmornings-send-this-to-your-chaos-buddy-p03-03.mp4 (SCHEDULED 2026-09-30T02:00:00.000Z) | pool-variant #0 | thumb @4846ms
+[2026-09-20T10:56:43.287Z] OK cartoonmornings-send-this-to-your-chaos-buddy-p03-03.mp4 -> video_id 28801834292755378 (SCHEDULED)
+[2026-09-20T10:56:43.715Z] Uploading cartoonmornings-send-this-to-your-chaos-buddy-p01-01.mp4 (SCHEDULED 2026-09-30T06:30:00.000Z) | pool-variant #0 | thumb @4640ms
+[2026-09-20T10:56:52.918Z] OK cartoonmornings-send-this-to-your-chaos-buddy-p01-01.mp4 -> video_id 1599806048483382 (SCHEDULED)
+[2026-09-20T10:56:53.357Z] Uploading cartoonmornings-this-clip-is-pure-chaos-p01-01.mp4 (SCHEDULED 2026-09-30T12:00:00.000Z) | pool-variant #0 | thumb @3593ms
+[2026-09-20T10:57:01.347Z] OK cartoonmornings-this-clip-is-pure-chaos-p01-01.mp4 -> video_id 1649549559936882 (SCHEDULED)
+[2026-09-20T10:57:01.793Z] Uploading cartoonmornings-toms-face-says-it-all-p01-01.mp4 (SCHEDULED 2026-10-01T02:00:00.000Z) | pool-variant #0 | thumb @3400ms
+[2026-09-20T10:57:10.395Z] OK cartoonmornings-toms-face-says-it-all-p01-01.mp4 -> video_id 1012129571847359 (SCHEDULED)
+[2026-09-20T10:57:10.825Z] Uploading cartoonmornings-jerrys-confidence-monday-energy-p02-02.mp4 (SCHEDULED 2026-10-01T06:30:00.000Z) | pool-variant #0 | thumb @5200ms
+[2026-09-20T10:57:20.662Z] OK cartoonmornings-jerrys-confidence-monday-energy-p02-02.mp4 -> video_id 1063300846569559 (SCHEDULED)
+[2026-09-20T10:57:21.103Z] Uploading cartoonmornings-bookmark-for-when-you-need-a-laugh-p02-02.mp4 (SCHEDULED 2026-10-01T12:00:00.000Z) | pool-variant #0 | thumb @6600ms
+[2026-09-20T10:57:30.025Z] OK cartoonmornings-bookmark-for-when-you-need-a-laugh-p02-02.mp4 -> video_id 1456386753204846 (SCHEDULED)
+[2026-09-20T10:57:30.462Z] Uploading cartoonmornings-pov-youre-tom-planning-at-3am-p01-01.mp4 (SCHEDULED 2026-10-02T02:00:00.000Z) | pool-variant #0 | thumb @6533ms
+[2026-09-20T10:57:40.420Z] OK cartoonmornings-pov-youre-tom-planning-at-3am-p01-01.mp4 -> video_id 3012512945763783 (SCHEDULED)
+[2026-09-20T10:57:40.856Z] Uploading cartoonmornings-invisible-attack-p02-02.mp4 (SCHEDULED 2026-10-02T06:30:00.000Z) | pool-variant #0 | thumb @7800ms
+[2026-09-20T10:57:50.176Z] OK cartoonmornings-invisible-attack-p02-02.mp4 -> video_id 1555046052503069 (SCHEDULED)
+[2026-09-20T10:57:50.614Z] Uploading cartoonmornings-pov-youre-the-mouse-who-always-wins-p01-01.mp4 (SCHEDULED 2026-10-02T12:00:00.000Z) | pool-variant #0 | thumb @3200ms
+[2026-09-20T10:58:00.237Z] OK cartoonmornings-pov-youre-the-mouse-who-always-wins-p01-01.mp4 -> video_id 1373753478121741 (SCHEDULED)
+[2026-09-20T10:58:00.681Z] Uploading cartoonmornings-wait-for-the-plot-twist-p01-01.mp4 (SCHEDULED 2026-10-03T02:00:00.000Z) | pool-variant #0 | thumb @3793ms
+[2026-09-20T10:58:07.736Z] OK cartoonmornings-wait-for-the-plot-twist-p01-01.mp4 -> video_id 1400413748926531 (SCHEDULED)
+[2026-09-20T10:58:08.199Z] Uploading cartoonmornings-who-is-winning-this-p02-02.mp4 (SCHEDULED 2026-10-03T06:30:00.000Z) | pool-variant #0 | thumb @5600ms
+[2026-09-20T10:58:16.099Z] OK cartoonmornings-who-is-winning-this-p02-02.mp4 -> video_id 1772220130490392 (SCHEDULED)
+[2026-09-20T10:58:16.539Z] Uploading cartoonmornings-the-15-seconds-when-tom-lost-it-p02-02.mp4 (SCHEDULED 2026-10-03T12:00:00.000Z) | pool-variant #0 | thumb @4800ms
+[2026-09-20T10:58:25.476Z] OK cartoonmornings-the-15-seconds-when-tom-lost-it-p02-02.mp4 -> video_id 3658925577619588 (SCHEDULED)
+[2026-09-20T10:58:25.939Z] Uploading cartoonmornings-when-the-tiny-hero-wins-again-p03-03.mp4 (SCHEDULED 2026-10-04T02:00:00.000Z) | pool-variant #0 | thumb @5406ms
+[2026-09-20T10:58:34.276Z] OK cartoonmornings-when-the-tiny-hero-wins-again-p03-03.mp4 -> video_id 1945441396125185 (SCHEDULED)
+[2026-09-20T10:58:34.704Z] Uploading cartoonmornings-tag-someone-whod-appreciate-this-p03-03.mp4 (SCHEDULED 2026-10-04T06:30:00.000Z) | pool-variant #0 | thumb @7793ms
+[2026-09-20T10:58:43.246Z] OK cartoonmornings-tag-someone-whod-appreciate-this-p03-03.mp4 -> video_id 2298489740951608 (SCHEDULED)
+[2026-09-20T10:58:43.671Z] Uploading cartoonmornings-the-rivalry-that-taught-us-pettiness-p02-02.mp4 (SCHEDULED 2026-10-04T12:00:00.000Z) | pool-variant #0 | thumb @4453ms
+[2026-09-20T10:58:52.424Z] OK cartoonmornings-the-rivalry-that-taught-us-pettiness-p02-02.mp4 -> video_id 1440662294631905 (SCHEDULED)
+[2026-09-20T10:58:52.861Z] Uploading cartoonmornings-the-15-seconds-when-tom-lost-it-p03-03.mp4 (SCHEDULED 2026-10-05T02:00:00.000Z) | pool-variant #0 | thumb @6946ms
+[2026-09-20T10:59:01.742Z] OK cartoonmornings-the-15-seconds-when-tom-lost-it-p03-03.mp4 -> video_id 1233240592353900 (SCHEDULED)
+[2026-09-20T10:59:02.176Z] Uploading cartoonmornings-jerrys-confidence-monday-energy-p03-03.mp4 (SCHEDULED 2026-10-05T06:30:00.000Z) | pool-variant #0 | thumb @4600ms
+[2026-09-20T10:59:09.649Z] OK cartoonmornings-jerrys-confidence-monday-energy-p03-03.mp4 -> video_id 1337489681795949 (SCHEDULED)
+[2026-09-20T10:59:10.083Z] Uploading cartoonmornings-this-was-my-childhood-p03-03.mp4 (SCHEDULED 2026-10-05T12:00:00.000Z) | pool-variant #0 | thumb @7120ms
+[2026-09-20T10:59:21.196Z] OK cartoonmornings-this-was-my-childhood-p03-03.mp4 -> video_id 1772712470598946 (SCHEDULED)
+[2026-09-20T10:59:21.635Z] Uploading cartoonmornings-the-second-jerry-became-legend-p01-01.mp4 (SCHEDULED 2026-10-06T02:00:00.000Z) | pool-variant #0 | thumb @5800ms
+[2026-09-20T10:59:29.510Z] OK cartoonmornings-the-second-jerry-became-legend-p01-01.mp4 -> video_id 1087623923914769 (SCHEDULED)
+[2026-09-20T10:59:29.938Z] Uploading cartoonmornings-jerry-said-not-today-p03-03.mp4 (SCHEDULED 2026-10-06T06:30:00.000Z) | pool-variant #0 | thumb @3800ms
+[2026-09-20T10:59:37.377Z] OK cartoonmornings-jerry-said-not-today-p03-03.mp4 -> video_id 1633782951543638 (SCHEDULED)
+[2026-09-20T10:59:37.813Z] Uploading cartoonmornings-that-one-second-tom-regrets-everything-p02-02.mp4 (SCHEDULED 2026-10-06T12:00:00.000Z) | pool-variant #0 | thumb @4800ms
+[2026-09-20T10:59:48.228Z] OK cartoonmornings-that-one-second-tom-regrets-everything-p02-02.mp4 -> video_id 1640602264454547 (SCHEDULED)
+[2026-09-20T10:59:48.685Z] Uploading cartoonmornings-the-rivalry-that-taught-us-pettiness-p03-03.mp4 (SCHEDULED 2026-10-07T02:00:00.000Z) | pool-variant #0 | thumb @4400ms
+[2026-09-20T10:59:58.491Z] OK cartoonmornings-the-rivalry-that-taught-us-pettiness-p03-03.mp4 -> video_id 1745317420091372 (SCHEDULED)
+[2026-09-20T10:59:58.929Z] Uploading cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-p03-03.mp4 (SCHEDULED 2026-10-07T06:30:00.000Z) | pool-variant #0 | thumb @4400ms
+[2026-09-20T11:00:06.186Z] OK cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-p03-03.mp4 -> video_id 1598612215391760 (SCHEDULED)
+[2026-09-20T11:00:06.639Z] Uploading cartoonmornings-the-comedy-timing-is-elite-p03-03.mp4 (SCHEDULED 2026-10-07T12:00:00.000Z) | pool-variant #0 | thumb @7800ms
+[2026-09-20T11:00:18.399Z] OK cartoonmornings-the-comedy-timing-is-elite-p03-03.mp4 -> video_id 1113818271328961 (SCHEDULED)
+[2026-09-20T11:00:18.833Z] Uploading cartoonmornings-save-this-for-your-next-bad-day-p02-02.mp4 (SCHEDULED 2026-10-08T02:00:00.000Z) | pool-variant #0 | thumb @7800ms
+[2026-09-20T11:00:27.994Z] OK cartoonmornings-save-this-for-your-next-bad-day-p02-02.mp4 -> video_id 1381994400587881 (SCHEDULED)
+[2026-09-20T11:00:28.458Z] Uploading cartoonmornings-childhood-memory-unlocked-p01-01.mp4 (SCHEDULED 2026-10-08T06:30:00.000Z) | pool-variant #0 | thumb @4233ms
+[2026-09-20T11:00:37.066Z] OK cartoonmornings-childhood-memory-unlocked-p01-01.mp4 -> video_id 1352298503365101 (SCHEDULED)
+[2026-09-20T11:00:37.500Z] Uploading cartoonmornings-wait-for-the-plot-twist-p02-02.mp4 (SCHEDULED 2026-10-08T12:00:00.000Z) | pool-variant #0 | thumb @3200ms
+[2026-09-20T11:00:44.649Z] OK cartoonmornings-wait-for-the-plot-twist-p02-02.mp4 -> video_id 1037251649125136 (SCHEDULED)
+[2026-09-20T11:00:45.089Z] Uploading cartoonmornings-prank-level-100-p01-01.mp4 (SCHEDULED 2026-10-09T02:00:00.000Z) | pool-variant #0 | thumb @3000ms
+[2026-09-20T11:01:29.296Z] Reels 67 total, 12 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T11:01:29.298Z] Mode: SCHEDULED from 2026-09-20T11:01:29.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T11:01:29.298Z] DRY RUN
+[2026-09-20T11:01:29.319Z]   PASS cartoonmornings-toms-face-says-it-all-p03-03.mp4 -> 2026-09-20T12:00:00.000Z (20/09/2026, 18:00:00)
+[2026-09-20T11:01:29.319Z]   PASS cartoonmornings-pov-youre-the-mouse-who-always-wins-p03-03.mp4 -> 2026-09-21T02:00:00.000Z (21/09/2026, 08:00:00)
+[2026-09-20T11:01:29.319Z]   PASS cartoonmornings-when-the-tiny-hero-wins-again-p02-02.mp4 -> 2026-09-21T06:30:00.000Z (21/09/2026, 12:30:00)
+[2026-09-20T11:01:29.320Z]   PASS cartoonmornings-grow-up-on-these-cartoons-p01-01.mp4 -> 2026-09-21T12:00:00.000Z (21/09/2026, 18:00:00)
+[2026-09-20T11:01:29.320Z]   PASS cartoonmornings-rate-this-chase-1-10-p01-01.mp4 -> 2026-09-22T02:00:00.000Z (22/09/2026, 08:00:00)
+[2026-09-20T11:01:29.320Z]   PASS cartoonmornings-the-comedy-timing-is-elite-p01-01.mp4 -> 2026-09-22T06:30:00.000Z (22/09/2026, 12:30:00)
+[2026-09-20T11:01:29.321Z]   PASS cartoonmornings-this-clip-is-pure-chaos-p03-03.mp4 -> 2026-09-22T12:00:00.000Z (22/09/2026, 18:00:00)
+[2026-09-20T11:01:29.321Z]   PASS cartoonmornings-this-was-my-childhood-p01-01.mp4 -> 2026-09-23T02:00:00.000Z (23/09/2026, 08:00:00)
+[2026-09-20T11:01:29.321Z]   PASS cartoonmornings-who-is-winning-this-p03-03.mp4 -> 2026-09-23T06:30:00.000Z (23/09/2026, 12:30:00)
+[2026-09-20T11:01:29.322Z]   PASS cartoonmornings-prank-level-100-p01-01.mp4 -> 2026-09-23T12:00:00.000Z (23/09/2026, 18:00:00)
+[2026-09-20T11:01:29.322Z]   PASS cartoonmornings-prank-level-100-p02-02.mp4 -> 2026-09-24T02:00:00.000Z (24/09/2026, 08:00:00)
+[2026-09-20T11:01:29.322Z]   PASS cartoonmornings-jerrys-confidence-monday-energy-p01-01.mp4 -> 2026-09-24T06:30:00.000Z (24/09/2026, 12:30:00)
+[2026-09-20T11:01:43.079Z] Reels 67 total, 12 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T11:01:43.081Z] Mode: SCHEDULED from 2026-09-20T11:01:43.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T11:01:43.484Z] Uploading cartoonmornings-toms-face-says-it-all-p03-03.mp4 (SCHEDULED 2026-09-20T12:00:00.000Z) | pool-variant #0 | thumb @5800ms
+[2026-09-20T11:01:51.207Z] OK cartoonmornings-toms-face-says-it-all-p03-03.mp4 -> video_id 1629427265329824 (SCHEDULED)
+[2026-09-20T11:01:51.622Z] Uploading cartoonmornings-rate-this-chase-1-10-p01-01.mp4 (SCHEDULED 2026-09-21T02:00:00.000Z) | pool-variant #0 | thumb @6800ms
+[2026-09-20T11:02:02.092Z] OK cartoonmornings-rate-this-chase-1-10-p01-01.mp4 -> video_id 4163696470589694 (SCHEDULED)
+[2026-09-20T11:02:02.521Z] Uploading cartoonmornings-who-is-winning-this-p03-03.mp4 (SCHEDULED 2026-09-21T06:30:00.000Z) | pool-variant #0 | thumb @4680ms
+[2026-09-20T11:02:11.179Z] OK cartoonmornings-who-is-winning-this-p03-03.mp4 -> video_id 1061883979955073 (SCHEDULED)
+[2026-09-20T11:02:11.602Z] Uploading cartoonmornings-pov-youre-the-mouse-who-always-wins-p03-03.mp4 (SCHEDULED 2026-09-21T12:00:00.000Z) | pool-variant #0 | thumb @6746ms
+[2026-09-20T11:02:20.989Z] OK cartoonmornings-pov-youre-the-mouse-who-always-wins-p03-03.mp4 -> video_id 957346550743766 (SCHEDULED)
+[2026-09-20T11:02:21.441Z] Uploading cartoonmornings-grow-up-on-these-cartoons-p01-01.mp4 (SCHEDULED 2026-09-22T02:00:00.000Z) | pool-variant #0 | thumb @4606ms
+[2026-09-20T11:02:32.500Z] OK cartoonmornings-grow-up-on-these-cartoons-p01-01.mp4 -> video_id 903744695933420 (SCHEDULED)
+[2026-09-20T11:02:32.921Z] Uploading cartoonmornings-jerrys-confidence-monday-energy-p01-01.mp4 (SCHEDULED 2026-09-22T06:30:00.000Z) | pool-variant #0 | thumb @6200ms
+[2026-09-20T11:02:43.016Z] OK cartoonmornings-jerrys-confidence-monday-energy-p01-01.mp4 -> video_id 4523534297965861 (SCHEDULED)
+[2026-09-20T11:02:43.455Z] Uploading cartoonmornings-prank-level-100-p02-02.mp4 (SCHEDULED 2026-09-22T12:00:00.000Z) | pool-variant #0 | thumb @5346ms
+[2026-09-20T11:02:51.650Z] OK cartoonmornings-prank-level-100-p02-02.mp4 -> video_id 28488321377518951 (SCHEDULED)
+[2026-09-20T11:02:52.082Z] Uploading cartoonmornings-the-comedy-timing-is-elite-p01-01.mp4 (SCHEDULED 2026-09-23T02:00:00.000Z) | pool-variant #0 | thumb @5206ms
+[2026-09-20T11:03:01.543Z] OK cartoonmornings-the-comedy-timing-is-elite-p01-01.mp4 -> video_id 1573645900363366 (SCHEDULED)
+[2026-09-20T11:03:01.983Z] Uploading cartoonmornings-this-clip-is-pure-chaos-p03-03.mp4 (SCHEDULED 2026-09-23T06:30:00.000Z) | pool-variant #0 | thumb @4800ms
+[2026-09-20T11:03:09.898Z] OK cartoonmornings-this-clip-is-pure-chaos-p03-03.mp4 -> video_id 969329119543980 (SCHEDULED)
+[2026-09-20T11:03:10.395Z] Uploading cartoonmornings-this-was-my-childhood-p01-01.mp4 (SCHEDULED 2026-09-23T12:00:00.000Z) | pool-variant #0 | thumb @4600ms
+[2026-09-20T11:03:19.495Z] OK cartoonmornings-this-was-my-childhood-p01-01.mp4 -> video_id 1544627124017536 (SCHEDULED)
+[2026-09-20T11:03:19.921Z] Uploading cartoonmornings-prank-level-100-p01-01.mp4 (SCHEDULED 2026-09-24T02:00:00.000Z) | pool-variant #0 | thumb @3000ms
+[2026-09-20T11:03:28.178Z] OK cartoonmornings-prank-level-100-p01-01.mp4 -> video_id 2656854114740201 (SCHEDULED)
+[2026-09-20T11:03:28.617Z] Uploading cartoonmornings-when-the-tiny-hero-wins-again-p02-02.mp4 (SCHEDULED 2026-09-24T06:30:00.000Z) | pool-variant #0 | thumb @7200ms
+[2026-09-20T11:03:37.670Z] OK cartoonmornings-when-the-tiny-hero-wins-again-p02-02.mp4 -> video_id 1374856158168328 (SCHEDULED)
+[2026-09-20T11:03:37.670Z] Done. uploaded=12 blocked=0 failed=0
+[2026-09-20T14:05:03.991Z] Reels 62 total, 10 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-20T14:05:03.998Z] Mode: SCHEDULED from 2026-10-09T04:16:00.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-20T14:05:05.301Z] Uploading cartoonmornings-he-set-a-trap-for-jerry-think-he-got-him-b3-ep98.mp4 (SCHEDULED 2026-10-09T04:16:00.000Z) | manifest-unique | thumb @7000ms
+[2026-09-20T14:05:13.451Z] OK cartoonmornings-he-set-a-trap-for-jerry-think-he-got-him-b3-ep98.mp4 -> video_id 1839512267226163 (SCHEDULED)
+[2026-09-20T14:05:13.864Z] Uploading cartoonmornings-toms-trap-design-1010-toms-trap-execution-010-the-gap-is-hil-b3-ep101.mp4 (SCHEDULED 2026-10-09T19:57:27.693Z) | manifest-unique | thumb @3600ms
+[2026-09-20T14:05:23.510Z] OK cartoonmornings-toms-trap-design-1010-toms-trap-execution-010-the-gap-is-hil-b3-ep101.mp4 -> video_id 28762046436713327 (SCHEDULED)
+[2026-09-20T14:05:23.915Z] Uploading cartoonmornings-pov-your-group-chat-would-be-so-chaotic-if-tom-and-jerry-wer-b3-ep100.mp4 (SCHEDULED 2026-10-10T08:38:35.916Z) | manifest-unique | thumb @7400ms
+[2026-09-20T14:05:32.977Z] OK cartoonmornings-pov-your-group-chat-would-be-so-chaotic-if-tom-and-jerry-wer-b3-ep100.mp4 -> video_id 955125997630534 (SCHEDULED)
+[2026-09-20T14:05:33.392Z] Uploading cartoonmornings-pov-you-grew-up-on-these-cartoons-this-was-our-childhood-b3-ep106.mp4 (SCHEDULED 2026-10-10T22:46:46.703Z) | manifest-unique | thumb @5400ms
+[2026-09-20T14:05:41.152Z] OK cartoonmornings-pov-you-grew-up-on-these-cartoons-this-was-our-childhood-b3-ep106.mp4 -> video_id 1786257839193140 (SCHEDULED)
+[2026-09-20T14:05:41.575Z] Uploading cartoonmornings-bookmark-for-when-you-need-a-laugh-trust-me-on-this-b3-ep102.mp4 (SCHEDULED 2026-10-11T17:18:18.328Z) | manifest-unique | thumb @7813ms
+[2026-09-20T14:05:50.594Z] OK cartoonmornings-bookmark-for-when-you-need-a-laugh-trust-me-on-this-b3-ep102.mp4 -> video_id 968746822200717 (SCHEDULED)
+[2026-09-20T14:05:50.995Z] Uploading cartoonmornings-when-the-cartoon-beef-is-more-entertaining-than-real-tv-foll-b3-ep105.mp4 (SCHEDULED 2026-10-12T07:18:16.188Z) | manifest-unique | thumb @7200ms
+[2026-09-20T14:05:59.569Z] OK cartoonmornings-when-the-cartoon-beef-is-more-entertaining-than-real-tv-foll-b3-ep105.mp4 -> video_id 1635206907976095 (SCHEDULED)
+[2026-09-20T14:05:59.966Z] Uploading cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-watch-what-happens-n-b3-ep97.mp4 (SCHEDULED 2026-10-12T19:50:42.927Z) | manifest-unique | thumb @6406ms
+[2026-09-20T14:06:09.894Z] OK cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-watch-what-happens-n-b3-ep97.mp4 -> video_id 2273228086797971 (SCHEDULED)
+[2026-09-20T14:06:10.307Z] Uploading cartoonmornings-the-second-jerry-became-legend-nobody-expected-this-b3-ep103.mp4 (SCHEDULED 2026-10-13T14:01:45.780Z) | manifest-unique | thumb @3166ms
+[2026-09-20T14:06:18.691Z] OK cartoonmornings-the-second-jerry-became-legend-nobody-expected-this-b3-ep103.mp4 -> video_id 1728438748249082 (SCHEDULED)
+[2026-09-20T14:06:19.102Z] Uploading cartoonmornings-jerrys-confidence-monday-energy-send-to-someone-who-needs-it-b3-ep104.mp4 (SCHEDULED 2026-10-14T07:48:45.100Z) | manifest-unique | thumb @6800ms
+[2026-09-20T14:06:28.856Z] OK cartoonmornings-jerrys-confidence-monday-energy-send-to-someone-who-needs-it-b3-ep104.mp4 -> video_id 2222571144981145 (SCHEDULED)
+[2026-09-20T14:06:29.258Z] Uploading cartoonmornings-jerry-be-like-i-didnt-study-and-i-still-passed-the-exam-b3-ep99.mp4 (SCHEDULED 2026-10-14T20:08:44.088Z) | manifest-unique | thumb @4800ms
+[2026-09-20T14:06:37.807Z] OK cartoonmornings-jerry-be-like-i-didnt-study-and-i-still-passed-the-exam-b3-ep99.mp4 -> video_id 2151554958727764 (SCHEDULED)
+[2026-09-20T14:06:37.808Z] Done. uploaded=10 blocked=0 failed=0
+[2026-09-30T11:05:02.773Z] Reels 1 total, 1 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-09-30T11:05:02.784Z] Mode: SCHEDULED from 2026-10-15T15:56:44.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-09-30T11:05:04.297Z] Uploading cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-28b763-01.mp4 (SCHEDULED 2026-10-15T15:56:44.000Z) | pool-variant #0 | thumb @10206ms
+[2026-09-30T11:05:20.128Z] OK cartoonmornings-pov-youre-jerry-and-tom-just-set-a-trap-28b763-01.mp4 -> video_id 2182429909007089 (SCHEDULED)
+[2026-09-30T11:05:20.136Z] Done. uploaded=1 blocked=0 failed=0
+[2026-10-03T08:05:02.317Z] Reels 2 total, 2 eligible (dir E:\NH\NextJS\VideoProcessor\src\autopost\video)
+[2026-10-03T08:05:02.341Z] Mode: SCHEDULED from 2026-10-16T08:42:44.000Z (gaps 720-1200min) | gate: 6 blocklist term(s)
+[2026-10-03T08:05:03.283Z] Uploading cartoonmornings-toms-face-says-it-all-28b763-01.mp4 (SCHEDULED 2026-10-16T08:42:44.000Z) | pool-variant #0 | thumb @3660ms
+[2026-10-03T08:05:11.763Z] OK cartoonmornings-toms-face-says-it-all-28b763-01.mp4 -> video_id 1418015937201528 (SCHEDULED)
+[2026-10-03T08:05:12.145Z] Uploading cartoonmornings-send-this-to-your-chaos-buddy-28b763-01.mp4 (SCHEDULED 2026-10-16T22:47:43.347Z) | pool-variant #0 | thumb @11380ms
+[2026-10-03T08:05:22.686Z] OK cartoonmornings-send-this-to-your-chaos-buddy-28b763-01.mp4 -> video_id 2164779467775231 (SCHEDULED)
+[2026-10-03T08:05:22.686Z] Done. uploaded=2 blocked=0 failed=0

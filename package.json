@@ -17,7 +17,10 @@
     "movie": "node src/scripts/movie.js",
     "sports": "node src/scripts/sports.js",
     "diy": "node src/scripts/diy.js",
-    "cartoon": "node src/scripts/cartoon.js"
+    "cartoon": "node src/scripts/cartoon.js",
+    "b2e": "node src/B2E/b2e.js",
+    "y2shorts": "node src/y2shorts/y2shorts.js",
+    "y2dl": "node src/y2shorts/y2shorts.js --download-only"
   },
   "keywords": [],
   "author": "",

@@ -25,6 +25,7 @@ const INPUT_DIR = path.join(REPO, "src", "input");
 const PROCESSED_DIR = path.join(INPUT_DIR, "processed");
 const VIDEO_DIR = path.join(REPO, "src", "autopost", "video");
 const LOG_PATH = path.join(REPO, "src", "autopost", "config", "daily-pipeline.log");
+const CAPTIONS_PATH = path.join(REPO, "src", "autopost", "config", "captions.json");
 
 const REELS_PER_SOURCE = 3; // 3 reels per source at peak hours
 
@@ -60,6 +61,39 @@ function safeCopy(src, destDir) {
   return dest;
 }
 
+// A reel is caption-covered only if captions.json has an entry keyed by its
+// exact filename. Any gap means the poster would fall back to the static
+// fb.json caption — same title/desc on every post. Never schedule in that state.
+function reelsMissingCaptions() {
+  let manifest = {};
+  try { manifest = JSON.parse(fs.readFileSync(CAPTIONS_PATH, "utf8")); } catch {}
+  const reels = fs.existsSync(VIDEO_DIR)
+    ? fs.readdirSync(VIDEO_DIR).filter((f) => /\.mp4$/i.test(f))
+    : [];
+  return reels.filter((f) => !manifest[f]);
+}
+
+function ensureCaptions() {
+  const missing = reelsMissingCaptions();
+  if (missing.length === 0) {
+    log("captions.json covers all reels — skipping build_captions.");
+    return true;
+  }
+  log(`${missing.length} reel(s) missing captions — running build_captions.py`);
+  const caption = run("python", ["src/autopost/build_captions.py"]);
+  if (caption.status !== 0) {
+    log(`build_captions.py failed (exit ${caption.status}) — aborting.`);
+    return false;
+  }
+  // Verify the rename+manifest pass actually closed the gap
+  const stillMissing = reelsMissingCaptions();
+  if (stillMissing.length > 0) {
+    log(`still ${stillMissing.length} reel(s) without captions after build — aborting.`);
+    return false;
+  }
+  return true;
+}
+
 function main() {
   log("=== cartoon_daily_pipeline start ===");
 
@@ -71,8 +105,9 @@ function main() {
     .sort();
 
   if (sources.length === 0) {
-    // No new sources, but there might still be unscheduled reels in video dir
-    log("No new source MP4s in src/input/ — checking for unscheduled reels...");
+    // No new sources, but there might still be uncaptioned/unscheduled reels
+    log("No new source MP4s in src/input/ — checking for uncaptioned reels...");
+    if (!ensureCaptions()) process.exit(1);
     const schedule = run("python", [
       "src/autopost/schedule_pending.py",
       "--viral",
@@ -127,14 +162,8 @@ function main() {
     process.exit(1);
   }
 
-  // 3. Build unique captions for all new reels
-  const caption = run("python", [
-    "src/autopost/build_captions.py",
-  ]);
-  if (caption.status !== 0) {
-    log(`build_captions.py failed (exit ${caption.status}) — aborting.`);
-    process.exit(1);
-  }
+  // 3. Build unique captions for any reel missing a manifest entry
+  if (!ensureCaptions()) process.exit(1);
 
   // 4. Schedule pending reels at peak viral hours
   //    schedule_pending.py --viral spreads them across 08:00, 12:30, 18:00 slots
